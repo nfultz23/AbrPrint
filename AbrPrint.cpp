@@ -1,5 +1,7 @@
 #include <iostream>
 #include <fstream>
+#include <cstring>
+#include <vector>
 
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
@@ -43,6 +45,18 @@ int main(int argc, char** argv) {
 	if (header[0] != '#') {
 		std::cout << "Imma be real, I have no idea how to handle this situation" << std::endl;
 		return DATA_EXIT_CODE;
+	}
+
+	//Parse through the header line and create a vector to store the header labels
+	std::vector<string> labels; string currHeader = "";
+	for (int x = 1; x < strlen(header); x++) {
+		if (header[x] == '\t' || x == strlen(header) - 1) {
+			labels.push_back(currHeader);
+			currHeader = "";
+			continue;
+		}
+
+		currHeader += header[x];
 	}
 
 
