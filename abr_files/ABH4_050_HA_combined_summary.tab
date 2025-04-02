@@ -1,0 +1,8 @@
+#FILE	NUM_FOUND	MTRAD	Nocardia_rifampin_resistant_beta-subunit_of_RNA_polymerase_(rpoB2)	RBPA	RbpA	icl	mtrA	relA
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_argannot_out.tab	0	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_card_out.tab	3	.	99.05	.	96.23	.	98.98	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_megares_out.tab	2	98.98	.	96.23	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_ncbi_out.tab	0	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_plasmidfinder_out.tab	0	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_resfinder_out.tab	0	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_050_HA_vfdb_out.tab	2	.	.	.	.	98.91	.	94.40

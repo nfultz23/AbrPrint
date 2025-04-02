@@ -1,0 +1,8 @@
+#FILE	NUM_FOUND	EFPA	MTRAD	Nocardia_rifampin_resistant_beta-subunit_of_RNA_polymerase_(rpoB2)	RBPA	RbpA	TAP	efpA	icl	ideR	mbtH	mtrA	phoP	relA	tap
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_argannot_out.tab	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_card_out.tab	5	.	.	96.68	.	93.04	.	92.59	.	.	.	100.00	.	.	97.56
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_megares_out.tab	4	92.59	100.00	.	93.04	.	97.56	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_ncbi_out.tab	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_plasmidfinder_out.tab	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_resfinder_out.tab	0	.	.	.	.	.	.	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/De_replicated_WGS/Set_2/ABricate_results/ABE4_509_vfdb_out.tab	5	.	.	.	.	.	.	.	99.84	99.42	92.13	.	91.80	94.94	.

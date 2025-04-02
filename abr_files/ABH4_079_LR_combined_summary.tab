@@ -1,0 +1,8 @@
+#FILE	NUM_FOUND	(Phe)catB11	CRP	catB11	hcp-2	vipB/mglB
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_argannot_out.tab	1	100.00	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_card_out.tab	2	.	99.53	100.00	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_megares_out.tab	1	.	99.53	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_ncbi_out.tab	1	.	.	100.00	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_plasmidfinder_out.tab	0	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_resfinder_out.tab	0	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH4_079_LR_vfdb_out.tab	2	.	.	.	100.00;100.00;100.00	96.15

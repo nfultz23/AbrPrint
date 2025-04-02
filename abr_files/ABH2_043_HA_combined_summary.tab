@@ -1,0 +1,8 @@
+#FILE	NUM_FOUND	(Bla)blaVHH-1	(Tet)tet(34)	(Tet)tet(35)	TET34	TET35	WHH	blaVHH-1	blaVHH-1_1	tet(34)	tet(34)_1	tet(35)	tet(35)_1
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_argannot_out.tab	3	99.77	100.00	99.91	.	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_card_out.tab	1	.	.	.	.	.	.	.	.	.	.	99.91	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_megares_out.tab	3	.	.	.	100.00	100.00	99.77	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_ncbi_out.tab	3	.	.	.	.	.	.	99.77	.	100.00	.	100.00	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_plasmidfinder_out.tab	0	.	.	.	.	.	.	.	.	.	.	.	.
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_resfinder_out.tab	3	.	.	.	.	.	.	.	99.77	.	100.00	.	99.91
+/project/dkarig/ecocoat/downstream_analysis/ABricate_results/ABH2_043_HA_vfdb_out.tab	0	.	.	.	.	.	.	.	.	.	.	.	.
