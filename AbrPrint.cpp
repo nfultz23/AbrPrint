@@ -50,16 +50,47 @@ int main(int argc, char** argv) {
 	//Parse through the header line and create a vector to store the header labels
 	std::vector<string> labels; string currHeader = "";
 	for (int x = 1; x < strlen(header); x++) {
+		//If a delimiter is found, separate it and push it into the label vector
 		if (header[x] == '\t' || x == strlen(header) - 1) {
 			labels.push_back(currHeader);
 			currHeader = "";
 			continue;
 		}
-
+		//Otherwise, add the character to the compiled header
 		currHeader += header[x];
 	}
 
+	//Create a 2D vector table. The outer vector will be the columns, each identified
+	// with the index of their title in the labels vector. The inner vector will be
+	// the data itself
+	std::vector<std::vector<string>> table;
+	for (int x = 0; x < labels.size(); x++) table.push_back(std::vector<string>());
 
+	//Iterate through the file to populate the table
+	std::string currEntry;
+	int i = 0;
+	while (src >> currEntry) {
+		table[i].push_back(currEntry);
+		i++;
+		i %= labels.size();
+	}
+
+	//Clean up the absolute file paths from the source file
+	int fileIndex = 0;
+	for (int x = 0; x < labels.size(); x++) {
+		if (labels[x] == "FILE") fileIndex = x; break;
+	}
+
+	//Iterate through the file column and erase the absolute file paths
+	for (int x = 0; x < table[fileIndex].size(); x++) {
+		//Find the index of the string where the file path ends
+		string currString = table[fileIndex][x];
+		int i = currString.length() - 1;
+		while (currString[i-1] != '/' && i > 0) i--;
+
+		//Store the filename substring
+		table[fileIndex][x] = currString.substr(i, currString.length());
+	}
 
 	src.close();
 
