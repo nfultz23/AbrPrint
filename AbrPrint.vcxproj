@@ -129,6 +129,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AbrPrint.cpp" />
+    <ClCompile Include="src\filectrl.cpp" />
+    <ClCompile Include="src\dataprocessing.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dataprocessing.h" />
+    <ClInclude Include="filectrl.h" />
+    <ClInclude Include="utils.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
