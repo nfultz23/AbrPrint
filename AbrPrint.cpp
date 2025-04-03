@@ -4,8 +4,6 @@
 #include <vector>
 
 #include "./utils.h"
-#include "./filectrl.h"
-#include "./dataprocessing.h"
 
 
 using std::string; using std::vector; using std::ifstream;
@@ -59,8 +57,28 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	/*
-	SDL_Window* window = util::generateWindow(); 
+	SDL_Window* window; SDL_Renderer* renderer; SDL_Texture* visualizer;
+	try {
+		window = util::generateWindow();
+		renderer = util::generateRenderer(window);
+		visualizer = util::generateTexture(renderer);
+
+		util::lineSegment sgmt = { 100, 100, 200, 400, 0xFF, 0x00, 0xFF, 0xFF };
+		util::renderLine(renderer, visualizer, sgmt);
+
+		util::renderTexture(renderer, visualizer); }
+	catch (const char* err) {
+		std::cout << err << std::endl;
+		return 1;
+	}
+	catch (string err) {
+		std::cout << err << std::endl;
+		return 1;
+	}
+	catch (...) {
+		std::cout << "Unknown error occurred" << std::endl;
+		return 1;
+	}
 	
 	bool RUNNING = true;
 	while (RUNNING) {
