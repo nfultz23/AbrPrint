@@ -1,7 +1,9 @@
 #ifndef FILECTRL_H
 #define FILECTRL_H
 
+
 #include <fstream>
+
 
 namespace filectrl {
 	using std::ifstream; using std::string;
@@ -17,5 +19,6 @@ namespace filectrl {
 	ifstream loadFile(string* filename);
 
 }
+
 
 #endif

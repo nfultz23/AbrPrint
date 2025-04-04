@@ -12,7 +12,10 @@ using std::string; using std::vector; using std::ifstream;
 int main(int argc, char** argv) {
 	//Initialize SDL first. If SDL is going to fail on this run, you don't want it to happen
 	// after the cycles have already been spent processing data
-	try { if (SDL_Init(SDL_INIT_VIDEO) < 0) throw SDL_GetError(); }
+	try {
+		if (SDL_Init(SDL_INIT_VIDEO) < 0) throw "main(): " + (string)SDL_GetError();
+		if (TTF_Init() < 0) throw "main(): " + (string)TTF_GetError();
+	}
 	catch (const char* err) {
 		std::cout << err << std::endl;
 		return 1;
@@ -57,16 +60,19 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-	SDL_Window* window; SDL_Renderer* renderer; SDL_Texture* visualizer;
+	SDL_Window* window; SDL_Renderer* renderer; SDL_Texture* visualizer; TTF_Font* font;
 	try {
 		window = util::generateWindow();
 		renderer = util::generateRenderer(window);
 		visualizer = util::generateTexture(renderer);
 
-		util::lineSegment sgmt = { 100, 100, 200, 400, 0xFF, 0x00, 0xFF, 0xFF };
-		util::renderLine(renderer, visualizer, sgmt);
+		font = util::getFont("Consolas", 60);
+		util::printText(
+			renderer, visualizer, "Hello world!", 100, 100, 14, { 255,255,255,255 }, font
+			);
 
-		util::renderTexture(renderer, visualizer); }
+		util::renderTexture(renderer, visualizer);
+	}
 	catch (const char* err) {
 		std::cout << err << std::endl;
 		return 1;
@@ -90,10 +96,11 @@ int main(int argc, char** argv) {
 		}
 	}
 
+	SDL_DestroyTexture(visualizer);
 	SDL_DestroyWindow(window);
-	window = NULL;
-	//*/
+	TTF_CloseFont(font);
 
+	TTF_Quit();
 	SDL_Quit();
 
 	return 0;

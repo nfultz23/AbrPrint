@@ -6,8 +6,7 @@
 #include "../dataprocessing.h"
 
 namespace proc {
-	using std::ifstream; using std::string;
-	using std::vector; using std::ios;
+	using std::ifstream; using std::string; using std::vector; using std::ios;
 
 	/*Uses a file stream to access the file's headers, creating a list of labels for use in graphing
 	*

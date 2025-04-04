@@ -1,16 +1,31 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
+#include <SDL_ttf.h>
 
 #include <string>
+#include <iostream>
 
 #include "./filectrl.h"
 #include "./dataprocessing.h"
 
+
 namespace util {
 	using std::string;
+
+	//This struct contains information about a color for rendering
+	struct color_t {
+		int r, g, b, a;
+	};
+
+	//This struct contains information about a polygon
+	struct polygon_t {
+		SDL_Point* pointArr;
+		int numPoints;
+	};
 
 	/*Constructs an SDL_Window pointer that can be used to display the working surface for
 	* debugging purposes.
@@ -99,26 +114,183 @@ namespace util {
 		return;
 	}
 
-	struct lineSegment {
-		int x0, y0;
-		int x1, y1;
-		int r, g, b, a;
-	};
 
-	/*
+	/*Renders a line segment onto the provided surface
+	* 
+	* Precondition: SDL2 must be initialized AND renderer != nullptr AND texture != nullptr
+	* Postcondition: texture containes the line segment provided OW texture = #texture
+	*		renderer = #renderer
+	* 
+	* Param renderer is a pointer to the SDL renderer that will print the line segment
+	* Param texture is the texture that the line will be rendered onto
+	* Param p0 is an SDL_Point that is the first in the line
+	* Param p1 is an SDL_Point that is the second in the line
 	*/
-	void renderLine(SDL_Renderer* renderer, SDL_Texture* texture, lineSegment line) {
+	void drawLine(
+		SDL_Renderer* renderer, SDL_Texture* texture, SDL_Point p0, SDL_Point p1, color_t color
+		) {
+		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
-		SDL_SetRenderDrawColor(renderer, line.r, line.g, line.b, line.a);
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
 		
-		if (SDL_RenderDrawLine(renderer, line.x0, line.y0, line.x1, line.y1) != 0)
+		//Draw the line to the surface, exiting if this fails
+		if (SDL_RenderDrawLine(renderer, p0.x, p0.y, p1.x, p1.y) != 0)
 			throw "util::renderTest(): " + (string)SDL_GetError();
 
+		//Reset the render target to the provided window, exiting if this fails
 		if (SDL_SetRenderTarget(renderer, NULL) != 0)
 			throw "util::renderTest(): " + (string)SDL_GetError();
 
 		return;
 	}
+
+
+	/*Renders a polygon from a color set and a series of points
+	* 
+	* Precondition: SDL2 must be initialized AND renderer != nullptr AND
+	*		texture != nullptr AND points != nullptr
+	* Postcondition: texture contains the polygon outline OW texture = #texture
+	*		renderer = #renderer
+	* 
+	* Param renderer is a pointer to the SDL renderer that will print the polygon
+	* Param texture is the texture that the polygon will be rendered onto
+	* Param polygon is a struct that stores the points contained in the polygon
+	* Param color is the color of the lines on the polygon
+	*/
+	void drawPolygon(
+		SDL_Renderer* renderer, SDL_Texture* texture, polygon_t polygon, color_t color
+		) {
+		//Draw each line in the polygon
+		for (int x = 0; x < polygon.numPoints - 1; x++) {
+			drawLine(renderer, texture, polygon.pointArr[x], polygon.pointArr[x + 1], color);
+		}
+
+		return;
+	}
+
+
+	/*Renders a rectangle from a color set and an SDL rect
+	*
+	* Precondition: SDL2 must be initialized AND renderer != nullptr AND
+	*		texture != nullptr AND points != nullptr
+	* Postcondition: texture contains the polygon outline OW texture = #texture
+	*		renderer = #renderer
+	*
+	* Param renderer is a pointer to the SDL renderer that will print the polygon
+	* Param texture is the texture that the polygon will be rendered onto
+	* Param rect is the SDL_Rect that will be drawn
+	* Param color is the color of the lines on the polygon
+	*/
+	void fillRect(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect, color_t color) {
+		//Set the render target to the texture and set the render color
+		SDL_SetRenderTarget(renderer, texture);
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+		if (SDL_RenderFillRect(renderer, &rect) != 0)
+			throw "util::fillRect(): " + (string)SDL_GetError();
+
+		if (SDL_SetRenderTarget(renderer, NULL) != 0)
+			throw "util::fillRect(): " + (string)SDL_GetError();
+
+		return;
+	}
+
+
+	/*Fills the screen with an input color
+	* 
+	* Precondition: SDL2 must be initialized AND renderer != nullptr AND
+	*		texture != nullptr AND points != nullptr
+	* Postcondition: texture is filled with the input color, renderer = #renderer
+	* 
+	* Param renderer is a pointer to the SDL renderer that will be coloring
+	* Param texture is a pointer to the texture being colored
+	* Param color is the color filling the surface
+	*/
+	void fill(SDL_Renderer* renderer, SDL_Texture* texture, color_t color) {
+		//Set the render target to the texture and set the render color
+		SDL_SetRenderTarget(renderer, texture);
+		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+
+		//Fill the texture with the color
+		if (SDL_RenderFillRect(renderer, NULL) != 0)
+			throw "util::fill(): " + (string)SDL_GetError();
+
+		if (SDL_SetRenderTarget(renderer, NULL) != 0)
+			throw "util::fill(): " + (string)SDL_GetError();
+
+		return;
+	}
+
+	/*Accesses a font from the typeface directory
+	* 
+	* Precondition: SDL2 must be initialized AND SDL_TTF must be initialized AND
+	*		there must be a Truetype Font in the typeface directory
+	* 
+	* Param fontName is the name of the font, matching the name of the Truetype
+	*		File (without the extension)
+	* Param size is the size of the font being loaded
+	* Returns a pointer to the TTF_Font that contains the loaded typeface information
+	*/
+	TTF_Font* getFont(string fontName, int size) {
+		//Create the font pointer
+		TTF_Font* font = TTF_OpenFont(("./typefaces/" + fontName + ".ttf").c_str(), 24);
+		if (!font) throw "util::getFont(): " + (string)TTF_GetError();
+
+		//Return the font
+		return font;
+	}
+
+
+	/*Prints input text onto a surface
+	* 
+	* Precondition: SDL2 must already be initialized AND SDL_TTF must already be initialized AND
+	*		renderer != nullptr AND texture != nullptr, AND font != nullptr AND size > 0
+	* Postcondition: texture contains the text placed at the positions provided and 
+	*		size specified
+	* 
+	* Param renderer is the SDL_Renderer that will be rendering the text onto the texture
+	* Param texture is the surface that the text will be rendered onto
+	* Param text is the string that the text will be printed
+	* Param x is the horizontal position of the text on the screen
+	* Param y is the vertical position of the text on the screen
+	* Param size is the height of the text on the screen
+	* Param color is the color_t object containing the hue of the text (the alpha value
+	*		will be omitted in this case)
+	* Param font is the TTF_Font that the text will be printed on
+	*/
+	void printText(
+		SDL_Renderer* renderer, SDL_Texture* texture, string text,
+		int x, int y, int size, color_t color, TTF_Font* font
+		) {
+		//Set the render target to the texture and set the render color
+		SDL_SetRenderTarget(renderer, texture);
+
+		//Convert the input color_t value to an SDL_Color object
+		SDL_Color clr = { color.r, color.g, color.b };
+
+		//Create a texture with the text rendered onto it
+		SDL_Surface* finSurface = TTF_RenderText_Blended(font, text.c_str(), clr);
+		if (!finSurface) throw "util::printText(): " + (string)TTF_GetError();
+		SDL_Texture* textTexture = SDL_CreateTextureFromSurface(renderer, finSurface);
+		if (!textTexture) throw "util::printText(): " + (string)SDL_GetError();
+
+		//Print the text onto the input texture
+		double ratio = (double)size / finSurface->h;
+		SDL_Rect srcRect = { 0, 0, finSurface->w, finSurface->h };
+		SDL_Rect destRect = { x, y, (int)(ratio * finSurface->w), size };
+		if (SDL_RenderCopy(renderer, textTexture, &srcRect, &destRect) != 0)
+			throw "util::printText(): " + (string)SDL_GetError();
+
+		//Cleanup the surfaces
+		SDL_DestroyTexture(textTexture);
+		SDL_FreeSurface(finSurface);
+
+		//Redirect the renderer to the window
+		SDL_SetRenderTarget(renderer, NULL);
+
+		return;
+	}
 }
+
 
 #endif

@@ -1,11 +1,13 @@
 #ifndef PROC_H
 #define PROC_H
 
+
 #include <fstream>
 #include <string>
 #include <vector>
 
 #define HEADER_BUFFER_SIZE 4096
+
 
 namespace proc {
 	using std::vector; using std::string; using std::ifstream;
@@ -35,5 +37,6 @@ namespace proc {
 	vector<vector<string>> makeTable(string filename, vector<string> labels, ifstream* src);
 
 }
+
 
 #endif
