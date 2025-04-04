@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "./utils.h"
+#include "./dataprocessing.h"
+#include "./filectrl.h"
 
 
 using std::string; using std::vector; using std::ifstream;
@@ -65,11 +67,14 @@ int main(int argc, char** argv) {
 		window = util::generateWindow();
 		renderer = util::generateRenderer(window);
 		visualizer = util::generateTexture(renderer);
+		font = util::getFont("Consolas", 24);
 
-		font = util::getFont("Consolas", 60);
-		util::printText(
-			renderer, visualizer, "Hello world!", 100, 100, 14, { 255,255,255,255 }, font
-			);
+		size_t fileindex = 0;
+		for (size_t x = 0; x < labels.size(); x++)
+			if (labels[x] == "FILE") fileindex = x;
+		SDL_Rect framepos = { 75, 25, util::IMG_W - 125, util::IMG_H - 240 };
+		proc::graphData_t graphInfo = { framepos, table[fileindex], 10, 90, 100 };
+		proc::printGraphFrame(renderer, visualizer, graphInfo, font);
 
 		util::renderTexture(renderer, visualizer);
 	}

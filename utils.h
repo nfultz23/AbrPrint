@@ -9,16 +9,13 @@
 #include <string>
 #include <iostream>
 
-#include "./filectrl.h"
-#include "./dataprocessing.h"
-
 
 namespace util {
 	using std::string;
 
 	//This struct contains information about a color for rendering
 	struct color_t {
-		int r, g, b, a;
+		uint16_t r, g, b, a;
 	};
 
 	//This struct contains information about a polygon
@@ -27,6 +24,11 @@ namespace util {
 		int numPoints;
 	};
 
+	static string ABR_TYPEFACE_DIR = "./typefaces/";
+	static int IMG_W = 1000;
+	static int IMG_H = 800;
+
+
 	/*Constructs an SDL_Window pointer that can be used to display the working surface for
 	* debugging purposes.
 	*
@@ -34,20 +36,23 @@ namespace util {
 	*
 	* Returns a pointer to an SDL2 window object
 	*/
-	SDL_Window* generateWindow() {
+	static SDL_Window* generateWindow() {
 		//Generate the SDL Window
 		SDL_Window* window = SDL_CreateWindow(
-			"AbrPrint Test",
+			"AbrPrint",
 			SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-			1000, 800,
+			IMG_W, IMG_H,
 			SDL_WINDOW_SHOWN
 		);
 
 		//Check the window was successfully created
 		if (!window) throw "util::generateWindow(): " + (string)SDL_GetError();
 
+		//Raise the window and return
+		SDL_RaiseWindow(window);
 		return window;
 	}
+
 
 	/*Constructs an SDL_Renderer pointer that can be used to render images onto textures
 	* 
@@ -56,15 +61,15 @@ namespace util {
 	* Param window is a pointer to the SDL2 window that the renderer will render to
 	* Returns a pointer to the new SDL2 Renderer
 	*/
-	SDL_Renderer* generateRenderer(SDL_Window* window) {
+	static SDL_Renderer* generateRenderer(SDL_Window* window) {
 		//Generate the SDL Renderer
 		SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
 		//Ensure the renderer was successfully created
 		if (!renderer) throw "util::generateRenderer(): " + (string)SDL_GetError();
-
 		return renderer;
 	}
+
 
 	/*Constructs an SDL_Testure pointer that will have all data printed onto it for
 	* the duration of the program
@@ -75,7 +80,7 @@ namespace util {
 	* Param renderer is the renderer that the texture will link to
 	* Returns a pointer to a texture created, attached to the renderer
 	*/
-	SDL_Texture* generateTexture(SDL_Renderer* renderer) {
+	static SDL_Texture* generateTexture(SDL_Renderer* renderer) {
 		//Generate the SDL Texture
 		SDL_Texture* texture =
 			SDL_CreateTexture(
@@ -98,7 +103,7 @@ namespace util {
 	* Param renderer is the renderer that will handle render actions to the display window
 	* Param texture is the texture being rendered onto the display window0
 	*/
-	void renderTexture(SDL_Renderer* renderer, SDL_Texture* texture) {
+	static void renderTexture(SDL_Renderer* renderer, SDL_Texture* texture) {
 		SDL_Rect rect;
 		rect.x = 0; rect.y = 0;
 		rect.w = 1000; rect.h = 800;
@@ -126,7 +131,7 @@ namespace util {
 	* Param p0 is an SDL_Point that is the first in the line
 	* Param p1 is an SDL_Point that is the second in the line
 	*/
-	void drawLine(
+	static void drawLine(
 		SDL_Renderer* renderer, SDL_Texture* texture, SDL_Point p0, SDL_Point p1, color_t color
 		) {
 		//Set the render target to the texture and set the render color
@@ -157,7 +162,7 @@ namespace util {
 	* Param polygon is a struct that stores the points contained in the polygon
 	* Param color is the color of the lines on the polygon
 	*/
-	void drawPolygon(
+	static void drawPolygon(
 		SDL_Renderer* renderer, SDL_Texture* texture, polygon_t polygon, color_t color
 		) {
 		//Draw each line in the polygon
@@ -181,7 +186,7 @@ namespace util {
 	* Param rect is the SDL_Rect that will be drawn
 	* Param color is the color of the lines on the polygon
 	*/
-	void fillRect(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect, color_t color) {
+	static void fillRect(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect, color_t color) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
 		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -206,7 +211,7 @@ namespace util {
 	* Param texture is a pointer to the texture being colored
 	* Param color is the color filling the surface
 	*/
-	void fill(SDL_Renderer* renderer, SDL_Texture* texture, color_t color) {
+	static void fill(SDL_Renderer* renderer, SDL_Texture* texture, color_t color) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
 		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -231,9 +236,9 @@ namespace util {
 	* Param size is the size of the font being loaded
 	* Returns a pointer to the TTF_Font that contains the loaded typeface information
 	*/
-	TTF_Font* getFont(string fontName, int size) {
+	static TTF_Font* getFont(string fontName, int size) {
 		//Create the font pointer
-		TTF_Font* font = TTF_OpenFont(("./typefaces/" + fontName + ".ttf").c_str(), 24);
+		TTF_Font* font = TTF_OpenFont((ABR_TYPEFACE_DIR + fontName + ".ttf").c_str(), 24);
 		if (!font) throw "util::getFont(): " + (string)TTF_GetError();
 
 		//Return the font
@@ -254,13 +259,14 @@ namespace util {
 	* Param x is the horizontal position of the text on the screen
 	* Param y is the vertical position of the text on the screen
 	* Param size is the height of the text on the screen
+	* Param angle is the angle (in degrees) that the text is rotated
 	* Param color is the color_t object containing the hue of the text (the alpha value
 	*		will be omitted in this case)
 	* Param font is the TTF_Font that the text will be printed on
 	*/
-	void printText(
+	static void printText(
 		SDL_Renderer* renderer, SDL_Texture* texture, string text,
-		int x, int y, int size, color_t color, TTF_Font* font
+		int x, int y, int size, int angle, color_t color, TTF_Font* font
 		) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
@@ -278,8 +284,14 @@ namespace util {
 		double ratio = (double)size / finSurface->h;
 		SDL_Rect srcRect = { 0, 0, finSurface->w, finSurface->h };
 		SDL_Rect destRect = { x, y, (int)(ratio * finSurface->w), size };
-		if (SDL_RenderCopy(renderer, textTexture, &srcRect, &destRect) != 0)
-			throw "util::printText(): " + (string)SDL_GetError();
+		//SDL_Point destCenter = { destRect.w / 2 + destRect.x, destRect.h / 2 + destRect.y };
+		//SDL_Point destCenter = { srcRect.w / 2 + srcRect.x, srcRect.h / 2 + srcRect.y };
+		SDL_Point destCenter = { 0, 0 };
+		//if (SDL_RenderCopy(renderer, textTexture, &srcRect, &destRect) != 0)
+		//	throw "util::printText(): " + (string)SDL_GetError();
+		if (SDL_RenderCopyEx(
+			renderer, textTexture, &srcRect, &destRect, (double)angle, &destCenter, SDL_FLIP_NONE
+			) != 0) throw "util::printText(): " + (string)SDL_GetError();
 
 		//Cleanup the surfaces
 		SDL_DestroyTexture(textTexture);
@@ -290,6 +302,7 @@ namespace util {
 
 		return;
 	}
+
 }
 
 

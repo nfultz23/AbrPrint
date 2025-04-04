@@ -8,6 +8,8 @@
 namespace filectrl {
 	using std::ifstream; using std::string;
 
+	static string ABR_INPUT_DIR = "./abr_files/";
+
 	/*Prompts the user for input to open a file for analyzation
 	*
 	* Precondition: Input name must match the name of a file in the abr_files directory

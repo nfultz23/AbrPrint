@@ -21,7 +21,7 @@ namespace filectrl {
 
 		//Open the file and ensure that it's ready for reading
 		std::ifstream src;
-		src.open("./abr_files/" + *filename, ios::in);
+		src.open(ABR_INPUT_DIR + *filename, ios::in);
 		if (!src.is_open()) throw "filectrl::loadFile(): Error opening file " + *filename + "\n";
 
 		//Return the filestream

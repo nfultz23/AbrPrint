@@ -86,4 +86,113 @@ namespace proc {
 		return table;
 	}
 
+	/*Creates the bounds of a graph based on the size of a window
+	*
+	* Precondition: SDL2 must already be initialized
+	*
+	* Param renderer is the renderer that is printing the graph frame on the screen
+	* Param texture is the surface that the graph frame is being rendered onto
+	* Param img_w is the total width of the image
+	* Param img_h is the total height of the image
+	*/
+	void printGraphFrame(
+		SDL_Renderer* renderer, SDL_Texture* texture, graphData_t graphInfo, TTF_Font* font
+		) {
+		//Wipe the screen for drawing the graph frame
+		util::fill(renderer, texture, ABR_BKGD_COLOR);
+
+		//Store the points for the outer edge of the graph
+		SDL_Point points[3] = {
+			{graphInfo.framepos.x - ABR_GRAPH_THICKNESS,
+			 graphInfo.framepos.y},
+			
+			{graphInfo.framepos.x - ABR_GRAPH_THICKNESS,
+			 graphInfo.framepos.y + graphInfo.framepos.h + ABR_GRAPH_THICKNESS},
+
+			{graphInfo.framepos.x + graphInfo.framepos.w,
+			 graphInfo.framepos.y + graphInfo.framepos.h + ABR_GRAPH_THICKNESS}
+		};
+		util::polygon_t boundary = { points, 3 };
+		
+		for (int x = 0; x < ABR_GRAPH_THICKNESS; x++) {
+			//Draw the current boundary
+			util::drawPolygon(renderer, texture, boundary, ABR_GRAPH_COLOR1);
+
+			//Shift the top-left boundary point
+			boundary.pointArr[0].x += 1;
+
+			//Shift the corner boundary point
+			boundary.pointArr[1].x += 1;
+			boundary.pointArr[1].y -= 1;
+			
+			//Shift the bottom-right boundary point
+			boundary.pointArr[2].y -= 1;
+		}
+
+		//Draw boundaries between the file columns
+		int colWidth = graphInfo.framepos.w / graphInfo.fileList.size();
+		for (size_t x = 0; x < graphInfo.fileList.size(); x++) {
+			util::printText(
+				renderer, texture,
+				graphInfo.fileList[x],
+				graphInfo.framepos.x + x * colWidth + 20,
+				graphInfo.framepos.y + graphInfo.framepos.h + 5 + ABR_GRAPH_THICKNESS,
+				14, 50,
+				ABR_GRAPH_COLOR1,
+				font
+			);
+
+			///* //This section is for the debugging purposes, don't leave this in
+			SDL_Point top = {
+				graphInfo.framepos.x + (x + 1) * colWidth,
+				graphInfo.framepos.y
+			};
+			SDL_Point bottom = {
+				graphInfo.framepos.x + (x + 1) * colWidth,
+				graphInfo.framepos.y + graphInfo.framepos.h
+			};
+			util::drawLine(renderer, texture, top, bottom, ABR_GRAPH_COLOR2);
+			//*/
+		}
+		util::drawLine(
+			renderer, texture,
+			{ graphInfo.framepos.x, graphInfo.framepos.y },
+			{ graphInfo.framepos.x + graphInfo.framepos.w, graphInfo.framepos.y },
+			ABR_GRAPH_COLOR2
+			);
+
+		//Draw the graph height markers and labels
+		int rowHeight = graphInfo.framepos.h / graphInfo.vertDivisions;
+		for (int x = 0; x <= graphInfo.vertDivisions; x++) {
+			SDL_Point left = {
+				graphInfo.framepos.x,
+				graphInfo.framepos.y + x * rowHeight
+			};
+			SDL_Point right = {
+				graphInfo.framepos.x + graphInfo.framepos.w,
+				graphInfo.framepos.y + x * rowHeight
+			};
+
+			util::drawLine(renderer, texture, left, right, ABR_GRAPH_COLOR2);
+
+			double index = (graphInfo.rangeMax - graphInfo.rangeMin) / graphInfo.vertDivisions;
+			index *= graphInfo.vertDivisions - x;
+			index += graphInfo.rangeMin;
+
+			string hLabel = std::to_string(index);
+			hLabel = hLabel.substr(0, hLabel.length() - 4);
+
+			util::printText(
+				renderer, texture,
+				hLabel,
+				graphInfo.framepos.x - 20 - 5 * hLabel.length() - ABR_GRAPH_THICKNESS,
+				graphInfo.framepos.y + x * rowHeight - 5,
+				14, 0,
+				ABR_GRAPH_COLOR1,
+				font
+				);
+		}
+
+		return;
+	}
 }
