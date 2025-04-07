@@ -34,9 +34,9 @@ int main(int argc, char** argv) {
 	//Gather the file's labels and populate a table for the data
 	vector<string> labels;
 	vector<vector<string>> table;
+	std::string filename;
 	try {
 		//Take in the filename (within the abr_files directory) to process
-		std::string filename;
 		ifstream src = filectrl::loadFile(&filename);
 
 		//Read in the entire header from the file being processed
@@ -64,18 +64,44 @@ int main(int argc, char** argv) {
 
 	SDL_Window* window; SDL_Renderer* renderer; SDL_Texture* visualizer; TTF_Font* font;
 	try {
+		//Generate the necessary things for rendering the graph from the file
 		window = util::generateWindow();
 		renderer = util::generateRenderer(window);
 		visualizer = util::generateTexture(renderer);
 		font = util::getFont("Consolas", 24);
 
+		//Fill the background and print the header of the graph
+		util::fill(renderer, visualizer, proc::ABR_BKGD_COLOR);
+		util::printText(
+			renderer, visualizer, filename, 75, 10, 18, 0, proc::ABR_GRAPH_COLOR1, font
+			);
+
+		//Discover the filename index
 		size_t fileindex = 0;
 		for (size_t x = 0; x < labels.size(); x++)
 			if (labels[x] == "FILE") fileindex = x;
-		SDL_Rect framepos = { 75, 25, util::IMG_W - 125, util::IMG_H - 240 };
-		proc::graphData_t graphInfo = { framepos, table[fileindex], 10, 90, 100 };
+		
+		//Store the position of the graph on the screen
+		SDL_Rect framepos = { 75, 110, util::IMG_W - 125, util::IMG_H - 300 };
+
+		//Initialize some graph information
+		proc::graphData_t graphInfo;
+		graphInfo.framepos = framepos;
+		graphInfo.fileList = table[fileindex];
+		graphInfo.vertDivisions = 10;
+		//Calculate the range of markers on the graph data
+		proc::getDataRange(table, &graphInfo);
+
+		std::vector<proc::graphBar_t> barsList = proc::generateBars(graphInfo, labels, table);
+		proc::focusShortBars(&barsList);
+
+		for (proc::graphBar_t bar : barsList)
+			util::fillRect(renderer, visualizer, bar.barRect, bar.color);
+
+		//Print the graph frame that will show behind the data
 		proc::printGraphFrame(renderer, visualizer, graphInfo, font);
 
+		//Render the graph onto the window
 		util::renderTexture(renderer, visualizer);
 	}
 	catch (const char* err) {
