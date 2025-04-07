@@ -139,7 +139,8 @@ namespace proc {
 				graphInfo.framepos.y + graphInfo.framepos.h + 5 + ABR_GRAPH_THICKNESS,
 				14, 40,
 				ABR_GRAPH_COLOR1,
-				font
+				font,
+				nullptr
 				);
 
 			///* //This section is for the debugging purposes, don't leave this in
@@ -192,7 +193,8 @@ namespace proc {
 				graphInfo.framepos.y + x * rowHeight - 5,
 				14, 0,
 				ABR_GRAPH_COLOR1,
-				font
+				font,
+				nullptr
 				);
 		}
 
@@ -207,7 +209,6 @@ namespace proc {
 	* 
 	* Param table is the data table generated from the input file
 	* Param graphdata is the a data structure whose range values will be populated
-	* Returns an ordered pair with the min and max values of the range
 	*/
 	void getDataRange(vector<vector<string>> table, graphData_t* graphdata) {
 		if (util::debug) std::cout << "getDataRange(): " << std::endl;
@@ -250,11 +251,14 @@ namespace proc {
 
 				//If this is the first value found, initialize the min and max values
 				if (first) {
-					std::cout << "  First nonzero value found, updating min and max..." << std::endl;
+					if (util::debug)
+						std::cout << "  First nonzero value found, updating min and max..." << std::endl;
 					min = currVal; max = currVal;
 					first = false;
-					std::cout << "  min == " << min << std::endl;
-					std::cout << "  max == " << max << std::endl;
+					if (util::debug) {
+						std::cout << "  min == " << min << std::endl;
+						std::cout << "  max == " << max << std::endl;
+					}
 				}
 
 				//Check whether the maximum value is greater than the current maximum
@@ -272,18 +276,14 @@ namespace proc {
 			}
 		}
 
-		/*
-		//Calculate a 25% buffer on either side of the range
-		double margin = (max - min) * 0.25;
-		//Give the range values 25% padding on either side, limited by the maximum and minimum values
-		graphdata->rangeMax = (max + margin < 100.0 ? max + margin : 100.0);
-		graphdata->rangeMin = (min - margin > 000.0 ? min - margin : 100.0);
-		*/
-
 		double margin = 0.0;
+		//If the min and max are the same, add 5% padding on either side
 		if (max == min) margin = 5.0;
+		//If there is a range of values, add 25% of the range as padding
 		else margin = (max - min) * 0.25;
 
+		//Add the padding to the value, ensuring that the range does not
+		// exceed 100% or 0% certainty values
 		graphdata->rangeMax = (max + margin < 100.0 ? max + margin : 100.0);
 		graphdata->rangeMin = (min - margin > 000.0 ? min - margin : 100.0);
 		
@@ -298,7 +298,16 @@ namespace proc {
 	}
 
 
-	/*
+	/*Generates a list of renderable bars to place on the graph from data and labels
+	* 
+	* Precondition: labels.size() == table.size() AND all entries in table have the same length AND
+	*		graphdata range values are already populated
+	* Postcondition: graphdata = #graphdata AND labels = #labels AND table = #table
+	* 
+	* Param graphdata is a struct containing graph positioning and range data
+	* Param labels is the list of database labels matching entries in the 'table' structure
+	* Param table is the 2D list of string data from the parsed file
+	* Returns a vector of graph bars reflecting the confidence of hits from the database
 	*/
 	vector<graphBar_t> generateBars(
 		graphData_t graphdata, vector<string> labels, vector<vector<string>> table
@@ -402,7 +411,13 @@ namespace proc {
 					std::cout << std::endl << std::endl;
 				}
 
-				graphList.push_back({ labels[x+2], barRect, ABR_BAR_COLORS[x] });
+				graphBar_t newBar;
+				newBar.label = labels[x + 2];
+				newBar.value = rawdata[x][y];
+				newBar.barRect = barRect;
+				newBar.color = ABR_BAR_COLORS[x];
+
+				graphList.push_back(newBar);
 			}
 			//Increase the offset so the bars are all equally visible
 			xoffset += (entryWidth - barwidth) / rawdata.size() * x * (2.0 / 3.0);
@@ -414,12 +429,91 @@ namespace proc {
 		return graphList;
 	}
 
-	/*Determines if the height of ba rB is less than that of bar A*/
-	bool isShorter(graphBar_t barA, graphBar_t barB) { return barA.barRect.h > barB.barRect.h; }
+
+	/*Determines if the height of bar B is less than that of bar A*/
+	bool isShorter(graphBar_t barA, graphBar_t barB) {
+		return barA.barRect.h > barB.barRect.h;
+	}
 
 
+	/*Sorts a graphBar_t list by bar height in descending order
+	* 
+	* Precondition: Each element in barsList has fully populated fields
+	* Postcondition: The elements in barsList are sorted by height in
+	*		descending order
+	* 
+	* Param barsList is a list of graphBar_t objects with populated data
+	* Returns nothing
+	*/
 	void focusShortBars(vector<graphBar_t>* barsList) {
 		std::sort(barsList->begin(), barsList->end(), isShorter);
+	}
+
+
+	/*Prints the key to the graph, explaining which database corresponds to which color
+	* 
+	* Precondition: labels.size() > 2 AND renderer != nullptr AND texture != nullptr AND
+	*		all graphinfo fields are populated AND font != nullptr
+	* Postcondition: texture will have the graph key rendered onto it above the graph frame
+	* 
+	* Param renderer is the SDL_Renderer that will be printing to the provided SDL_Texture
+	* Param texture is the SDL_Texture that will be receiving the graph key
+	* Param labels is the list of labels parsed from the input data table, contains the database
+	*	names that correspond to the printed data
+	* Param graphinfo is the struct containing position/sizing information for the graph frame
+	* Param font is the TTL_Font that the labels will be printed in
+	*/
+	void printKeys(
+		SDL_Renderer* renderer, SDL_Texture* texture, vector<string> labels,
+		graphData_t graphinfo, TTF_Font* font
+	) {
+		//Store the starting positions of the graph and the sizing for both color tiles and text
+		int xpos = graphinfo.framepos.x, ypos = graphinfo.framepos.y - 60;
+		int colw = 15, colh = 15;
+		int fontsize = 16;
+
+		//Iterate through each database field in the labels list
+		for (int x = 2; x < labels.size(); x++) {
+			//Create a color tile rect with a proper position, centering it with the text
+			SDL_Rect colTileRect = { xpos, ypos + (fontsize - colh) / 2, colw, colh };
+			//Draw the color tile and move the xposition to where the new text will be printed
+			try {
+				util::fillRect(renderer, texture, colTileRect, ABR_BAR_COLORS[x - 2]);
+			}
+			//Handle potential errors and throw them up the chain
+			catch (std::string err) {
+				throw "proc::printKeys(): " + (std::string)err;
+			}
+			catch (const char* err) {
+				throw "proc::printKeys(): " + (std::string)err;
+			}
+			catch (...) {
+				throw "proc::printKeuys(): Unknown error occurred while drawing color tile";
+			}
+			xpos += colw + 5;
+
+			//Print the label of the database and store the destination rect of the text
+			SDL_Rect textRect;
+			try {
+				util::printText(renderer, texture, labels[x], xpos, ypos, fontsize,
+								0, ABR_GRAPH_COLOR1, font, &textRect);
+			}
+			//Handle potential errors and throw them up the chain
+			catch (std::string err) {
+				throw "proc::printKeys(): " + (std::string)err;
+			}
+			catch (const char* err) {
+				throw "proc::printKeys(): " + (std::string)err;
+			}
+			catch (...) {
+				throw "proc::printKeuys(): Unknown error occurred while rendering label text";
+			}
+			xpos += colw + 5;
+
+			//Advance the x-position to the other side of the text, adding padding
+			xpos += textRect.w + 25;
+		}
+
 		return;
 	}
 

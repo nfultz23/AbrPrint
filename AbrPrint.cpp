@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 		//Fill the background and print the header of the graph
 		util::fill(renderer, visualizer, proc::ABR_BKGD_COLOR);
 		util::printText(
-			renderer, visualizer, filename, 75, 10, 18, 0, proc::ABR_GRAPH_COLOR1, font
+			renderer, visualizer, filename, 75, 10, 24, 0, proc::ABR_GRAPH_COLOR1, font, nullptr
 			);
 
 		//Discover the filename index
@@ -95,11 +95,14 @@ int main(int argc, char** argv) {
 		std::vector<proc::graphBar_t> barsList = proc::generateBars(graphInfo, labels, table);
 		proc::focusShortBars(&barsList);
 
+		//Draw each of the bars on under the graph
 		for (proc::graphBar_t bar : barsList)
 			util::fillRect(renderer, visualizer, bar.barRect, bar.color);
 
 		//Print the graph frame that will show behind the data
 		proc::printGraphFrame(renderer, visualizer, graphInfo, font);
+
+		proc::printKeys(renderer, visualizer, labels, graphInfo, font);
 
 		//Render the graph onto the window
 		util::renderTexture(renderer, visualizer);

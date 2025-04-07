@@ -42,6 +42,7 @@ namespace proc {
 
 	struct graphBar_t {
 		string label;
+		double value;
 		SDL_Rect barRect;
 		util::color_t color;
 	};
@@ -96,14 +97,52 @@ namespace proc {
 	*/
 	void getDataRange(vector<vector<string>> table, graphData_t* graphdata);
 
-	/*
+
+	/*Generates a list of renderable bars to place on the graph from data and labels
+	*
+	* Precondition: labels.size() == table.size() AND all entries in table have the same length AND
+	*		graphdata range values are already populated
+	* Postcondition: graphdata = #graphdata AND labels = #labels AND table = #table
+	*
+	* Param graphdata is a struct containing graph positioning and range data
+	* Param labels is the list of database labels matching entries in the 'table' structure
+	* Param table is the 2D list of string data from the parsed file
+	* Returns a vector of graph bars reflecting the confidence of hits from the database
 	*/
 	vector<graphBar_t> generateBars(
 		graphData_t graphdata, vector<string> labels, vector<vector<string>> table
 		);
 
 
+	/*Sorts a graphBar_t list by bar height in descending order
+	*
+	* Precondition: Each element in barsList has fully populated fields
+	* Postcondition: The elements in barsList are sorted by height in
+	*		descending order
+	*
+	* Param barsList is a list of graphBar_t objects with populated data
+	* Returns nothing
+	*/
 	void focusShortBars(vector<graphBar_t>* barsList);
+
+
+	/*Prints the key to the graph, explaining which database corresponds to which color
+	*
+	* Precondition: labels.size() > 2 AND renderer != nullptr AND texture != nullptr AND
+	*		all graphinfo fields are populated AND font != nullptr
+	* Postcondition: texture will have the graph key rendered onto it above the graph frame
+	*
+	* Param renderer is the SDL_Renderer that will be printing to the provided SDL_Texture
+	* Param texture is the SDL_Texture that will be receiving the graph key
+	* Param labels is the list of labels parsed from the input data table, contains the database
+	*	names that correspond to the printed data
+	* Param graphinfo is the struct containing position/sizing information for the graph frame
+	* Param font is the TTL_Font that the labels will be printed in
+	*/
+	void printKeys(
+		SDL_Renderer* renderer, SDL_Texture* texture, vector<string> labels,
+		graphData_t graphinfo, TTF_Font* font
+	);
 
 }
 

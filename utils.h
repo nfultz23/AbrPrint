@@ -13,7 +13,7 @@
 
 namespace util {
 
-	static bool debug = 1;
+	static bool debug = 0;
 
 	//This struct contains information about a color for rendering
 	struct color_t {
@@ -266,10 +266,13 @@ namespace util {
 	* Param color is the color_t object containing the hue of the text (the alpha value
 	*		will be omitted in this case)
 	* Param font is the TTF_Font that the text will be printed on
+	* Param resBlock is an optional pointer to a rect that will be populated with the
+	*		text's destination (will not work for rotated text)
 	*/
 	inline void printText(
 		SDL_Renderer* renderer, SDL_Texture* texture, std::string text,
-		int x, int y, int size, int angle, color_t color, TTF_Font* font
+		int x, int y, int size, int angle, color_t color, TTF_Font* font,
+		SDL_Rect* resBlock
 	) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
@@ -288,6 +291,8 @@ namespace util {
 		SDL_Rect srcRect = { 0, 0, finSurface->w, finSurface->h };
 		SDL_Rect destRect = { x, y, (int)(ratio * finSurface->w), size };
 		SDL_Point rotPoint = { 0, 0 };
+
+		if (resBlock != nullptr) *resBlock = destRect;
 
 		if (SDL_RenderCopyEx(
 			renderer, textTexture, &srcRect, &destRect, (double)angle, &rotPoint, SDL_FLIP_NONE
