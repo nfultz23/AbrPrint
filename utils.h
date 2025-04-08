@@ -13,8 +13,6 @@
 
 namespace util {
 
-	static bool debug = 0;
-
 	//This struct contains information about a color for rendering
 	struct color_t {
 		uint16_t r, g, b, a;

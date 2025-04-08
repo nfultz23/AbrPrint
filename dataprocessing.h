@@ -20,7 +20,7 @@ namespace proc {
 	static const util::color_t ABR_GRAPH_COLOR2 = { 185, 200, 225, 255 };
 
 	static const util::color_t ABR_BAR_COLORS[] = {
-		{160,  40,  40, 255},
+		{160,  60,  60, 255},
 		{190, 120,  40, 255},
 		{160, 170,  40, 255},
 		{ 60, 150,  40, 255},
@@ -142,6 +142,14 @@ namespace proc {
 	void printKeys(
 		SDL_Renderer* renderer, SDL_Texture* texture, vector<string> labels,
 		graphData_t graphinfo, TTF_Font* font
+	);
+
+
+	/*
+	*/
+	void printBars(
+		SDL_Renderer* renderer, SDL_Texture* texture, vector<graphBar_t> barsList,
+		TTF_Font* font, bool printVals
 	);
 
 }

@@ -211,10 +211,7 @@ namespace proc {
 	* Param graphdata is the a data structure whose range values will be populated
 	*/
 	void getDataRange(vector<vector<string>> table, graphData_t* graphdata) {
-		if (util::debug) std::cout << "getDataRange(): " << std::endl;
 		//Initialize the minimum and maximum values to null values
-		if (util::debug)
-			std::cout << "  Initializing min and max to 0" << std::endl;
 		double min = 0, max = 0;
 
 		//Set a value to track the initialization of the min/max values
@@ -224,14 +221,10 @@ namespace proc {
 				
 				//If no value was found in the Abricate processing, skip past the entry
 				if (table[x][y] == ".") {
-					if (util::debug)
-						std::cout << "  null value found, moving on" << std::endl;
 					continue;
 				}
 
 				//This section converts a string entry to a double value
-				if (util::debug)
-					std::cout << "  Converting the current value to a double" << std::endl;
 				double currVal = 0;
 				//If multiple values have been found, take the first and convert it to a double
 				// This will probably change later when I decide on how to handle multiple hits
@@ -246,33 +239,17 @@ namespace proc {
 				}
 				//If a single value has been found, convert it to a double directly
 				else currVal = std::stod(table[x][y]);
-				if (util::debug)
-					std::cout << "  currVal == " << currVal << std::endl;
 
 				//If this is the first value found, initialize the min and max values
 				if (first) {
-					if (util::debug)
-						std::cout << "  First nonzero value found, updating min and max..." << std::endl;
 					min = currVal; max = currVal;
 					first = false;
-					if (util::debug) {
-						std::cout << "  min == " << min << std::endl;
-						std::cout << "  max == " << max << std::endl;
-					}
 				}
 
 				//Check whether the maximum value is greater than the current maximum
 				if (currVal > max) max = currVal;
-				if (util::debug) {
-					std::cout << "  Checking for increased maximum" << std::endl;
-					std::cout << "  max == " << max << std::endl;
-				}
 				//Check whether the minimum value is less than the current minimum
 				if (currVal < min) min = currVal;
-				if (util::debug) {
-					std::cout << "  Checking for decreased minimum" << std::endl;
-					std::cout << "  min == " << min << std::endl;
-				}
 			}
 		}
 
@@ -286,13 +263,6 @@ namespace proc {
 		// exceed 100% or 0% certainty values
 		graphdata->rangeMax = (max + margin < 100.0 ? max + margin : 100.0);
 		graphdata->rangeMin = (min - margin > 000.0 ? min - margin : 100.0);
-		
-		if (util::debug) {
-			std::cout << "  margin == " << margin << std::endl;
-			std::cout << "  graphdata->rangeMax == " << graphdata->rangeMax << std::endl;
-			std::cout << "  graphdata->rangeMin == " << graphdata->rangeMin << std::endl;
-			std::cout << std::endl << std::endl;
-		}
 
 		return;
 	}
@@ -312,10 +282,8 @@ namespace proc {
 	vector<graphBar_t> generateBars(
 		graphData_t graphdata, vector<string> labels, vector<vector<string>> table
 		) {
-		if (util::debug) std::cout << "generateBars(): " << std::endl;
 
 		//Process the table into raw data
-		if (util::debug) std::cout << "Compiling the raw data" << std::endl;
 		vector<vector<double>> rawdata;
 		for (int x = 2; x < labels.size(); x++) {
 			
@@ -338,78 +306,41 @@ namespace proc {
 				}
 			}
 			rawdata.push_back(currCol);
-
-			if (util::debug) {
-				std::cout << labels[x] << ": ";
-				util::printVec(table[x]);
-				std::cout << labels[x] << ": ";
-				util::printVec(rawdata[x - 2]);
-				std::cout << std::endl;
-			}
 		}
 
 		//Calculate the width of a bar on the screen so it only has to be done once
 		const int entryWidth = (graphdata.framepos.w / table[0].size());
-		if (util::debug)
-			std::cout << "entryWidth == " << entryWidth << std::endl;
 		int barwidth = entryWidth - (entryWidth * 0.1);
 		if (rawdata[0].size() >= 2)
 			barwidth = (barwidth * (rawdata[0].size() / 2 + 1)) / rawdata[0].size();
 		else if (rawdata[0].size() == 2)
 			barwidth = (barwidth * 2) / 3;
-		if (util::debug)
-			std::cout << "barwidth == " << barwidth << std::endl;
 
 		//Create a vector to store the bars, they will be graphed label-by-label
 		vector<graphBar_t> graphList;
 		//Parse through the data to create bars for rendering
-		if (util::debug)
-			std::cout << "Generating bars for display" << std::endl;
 		int xoffset = 0;
 		for (int x = 0; x < rawdata.size(); x++) {
-			if (util::debug) {
-				std::cout << "Working with label \'" << labels[x + 2];
-				std::cout << "\'" << std::endl;
-			}
 			for (int y = 0; y < rawdata[x].size(); y++) {
 				//If the current entry is zero, move on
-				//if (rawdata[x][y] == 0) continue;
-				if (util::debug)
-					std::cout << "  rawdata[x][y] == " << rawdata[x][y] << std::endl;
+				if (rawdata[x][y] == 0) continue;
 
 				//Update the horizontal position based on the file being displayed
 				int xpos = ABR_GRAPH_THICKNESS + graphdata.framepos.x;
 				xpos += (entryWidth * y) + (entryWidth * 0.05) + xoffset;
 				if (y == 0) xpos -= ABR_GRAPH_THICKNESS;
-				if (util::debug)
-					std::cout << "  xpos == " << xpos << std::endl;
 
 				//Calculate the height of the bar
 				double range = graphdata.rangeMax - graphdata.rangeMin;
-				if (util::debug)
-					std::cout << "  range == " << range << std::endl;
-				int height = 0; //=
+				int height = 0;
 				if (rawdata[x][y] != 0)
 					height = graphdata.framepos.h * ((double)(rawdata[x][y] - graphdata.rangeMin) / range);
-				if (util::debug)
-					std::cout << "  height == " << height << std::endl;
-
+				
 				//Calculate the top position of the bar
 				int ypos = graphdata.framepos.y + (graphdata.framepos.h - height);
-				if (util::debug)
-					std::cout << "  ypos == " << ypos << std::endl << std::endl;
 
 				//Gather the bar's rect
 				SDL_Rect barRect = { xpos, ypos, barwidth, height };
-				if (util::debug) {
-					std::cout << "  barRect == {" << std::endl;
-					std::cout << "    " << barRect.x << "," << std::endl;
-					std::cout << "    " << barRect.y << "," << std::endl;
-					std::cout << "    " << barRect.w << "," << std::endl;
-					std::cout << "    " << barRect.h << "," << std::endl;
-					std::cout << "  };" << std::endl;
-					std::cout << std::endl << std::endl;
-				}
 
 				graphBar_t newBar;
 				newBar.label = labels[x + 2];
@@ -421,8 +352,6 @@ namespace proc {
 			}
 			//Increase the offset so the bars are all equally visible
 			xoffset += (entryWidth - barwidth) / rawdata.size() * x * (2.0 / 3.0);
-			if (util::debug) std::cout << "  xoffset == " << xoffset << std::endl;
-			if (util::debug) std::cout << std::endl;
 		}
 
 		//Return the compiled list of bars
@@ -517,4 +446,36 @@ namespace proc {
 		return;
 	}
 
+
+	/*Prints a list of bars to the provided surface, including their values if the flag is set
+	* 
+	* Precondition: renderer != nullptr AND texture != nullptr AND
+	*		(font == nullptr IFF printVals == false)
+	* Postcondition: The bars are rendered onto the screen, with the value if specified
+	* 
+	* Param renderer is the SDL_Renderer required to render onto a surface
+	* Param texture is the SDL_Texture that will recieve the bars
+	* Param barsList is a vector containing populated graphBar_t objects
+	* Param font is a TTF_Font that the values will be printed in (nullptr if printVals is false)
+	* Param printVals is a bool representing whether the bar values will be printed
+	*/
+	void printBars(
+		SDL_Renderer* renderer, SDL_Texture* texture, vector<graphBar_t> barsList,
+		TTF_Font* font, bool printVals
+	) {
+		//Iterate through each bar in the list
+		for (graphBar_t bar : barsList) {
+			//Print the bar itself
+			util::fillRect(renderer, texture, bar.barRect, bar.color);
+
+			//Print the value of the bar if instructed to do so
+			if (printVals)
+				util::printText(renderer, texture,
+					std::to_string(bar.value).substr(0, std::to_string(bar.value).length() - 4), //I don't want to talk about it
+					bar.barRect.x + 5,
+					bar.barRect.y + 5, 14, 0, ABR_GRAPH_COLOR1, font, nullptr);
+		}
+
+		return;
+	}
 }

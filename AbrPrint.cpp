@@ -12,6 +12,8 @@ using std::string; using std::vector; using std::ifstream;
 
 
 int main(int argc, char** argv) {
+	
+
 	//Initialize SDL first. If SDL is going to fail on this run, you don't want it to happen
 	// after the cycles have already been spent processing data
 	try {
@@ -95,14 +97,13 @@ int main(int argc, char** argv) {
 		std::vector<proc::graphBar_t> barsList = proc::generateBars(graphInfo, labels, table);
 		proc::focusShortBars(&barsList);
 
-		//Draw each of the bars on under the graph
-		for (proc::graphBar_t bar : barsList)
-			util::fillRect(renderer, visualizer, bar.barRect, bar.color);
-
 		//Print the graph frame that will show behind the data
 		proc::printGraphFrame(renderer, visualizer, graphInfo, font);
-
+		//Print the color keys at the top of the graph frame
 		proc::printKeys(renderer, visualizer, labels, graphInfo, font);
+
+		//Draw each of the bars on under the graph
+		proc::printBars(renderer, visualizer, barsList, font, true);
 
 		//Render the graph onto the window
 		util::renderTexture(renderer, visualizer);
