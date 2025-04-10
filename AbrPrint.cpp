@@ -221,7 +221,8 @@ int main(int argc, char** argv) {
 
 		//Save the graph to a file
 		filectrl::saveGraphToFile(
-			filename, util::ABR_OUTPUT_EXT, util::ABR_OUTPUT_DIR, "bargraph", visualizer
+			renderer, filename, util::ABR_OUTPUT_EXT,
+			util::ABR_OUTPUT_DIR, "bargraph", visualizer
 			);
 
 		//Clean up the dynamically allocated objects

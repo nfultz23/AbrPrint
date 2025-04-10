@@ -128,6 +128,7 @@ namespace filectrl {
 	/*
 	*/
 	void saveGraphToFile(
+		SDL_Renderer* renderer,
 		std::string sourceName, std::string fileType, std::string directory,
 		std::string graphType, SDL_Texture* graph
 	) {
@@ -144,7 +145,39 @@ namespace filectrl {
 		//Create the full path to the file using the directory and name
 		std::string fullpath = directory + filename;
 
+		
+		//Check whether the directory being saved to exists
+		std::filesystem::path outdir = util::ABR_OUTPUT_DIR;
+		bool exists = std::filesystem::is_directory(outdir);
 
+		//If the output directory does not already exist, attempt to instantiate it
+		if (!exists) {
+			if (!std::filesystem::create_directory(outdir))
+				throw "filectrl::saveGraphToFile(): Failed to create output directory";
+		}
+
+		//Store encoding data about the passed-in graph texture
+		Uint32 format; int width, height;
+		SDL_QueryTexture(graph, &format, NULL, &width, &height);
+
+		//Create an SDL Surface to store the data
+		SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(0, width, height, 32, format);
+
+		//Clone the texture onto the surface
+		if (SDL_SetRenderTarget(renderer, graph) < 0)
+			throw "saveGraphToFile(): Failed to direct renderer to graph output texture";
+		if (SDL_RenderReadPixels(renderer, NULL, format, surface->pixels, surface->pitch) < 0)
+			throw "saveGraphToFile(): Failed to copy graph data to render surface";
+
+		//Write the surface to the proper file type
+		if (util::ABR_OUTPUT_EXT == "PNG") {
+			;
+		}
+		else if (util::ABR_OUTPUT_EXT == "JPEG") {
+			;
+		}
+		else
+			throw "saveGraphToFile(): Unrecognized file extension detected, failed to save";
 
 		return;
 	}

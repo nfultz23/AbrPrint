@@ -42,6 +42,7 @@ namespace filectrl {
 	/*
 	*/
 	void saveGraphToFile(
+		SDL_Renderer* renderer,
 		std::string sourceName, std::string fileType, std::string directory,
 		std::string graphType, SDL_Texture* graph
 	);
