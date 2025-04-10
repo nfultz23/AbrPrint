@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
+
 	//Initialize SDL first. If SDL is going to fail on this run, you don't want it to happen
 	// after the cycles have already been spent processing data
 	try {
@@ -72,29 +73,6 @@ int main(int argc, char** argv) {
 		return 1;
 	}
 
-
-	/*
-	if (source == "") {
-		std::cout << "Detected batch job from default directory, searching ";
-		std::cout << util::ABR_INPUT_DIR << std::endl;
-	}
-	else if (util::raw && util::batch) {
-		std::cout << "Detected batch job from raw directory, searching ";
-		std::cout << source << std::endl;
-	}
-	else if (util::raw) {
-		std::cout << "Detected individual graph generation, searching ";
-		std::cout << source << std::endl;
-	}
-	else if (util::batch) {
-		std::cout << "Detected batch generation from default directory, searching ";
-		std::cout << util::ABR_INPUT_DIR << source << std::endl;
-	}
-	else {
-		std::cout << "Detected individual generation from default directory, searching ";
-		std::cout << util::ABR_INPUT_DIR << source << std::endl;
-	}
-	std::cout << std::endl;//*/
 
 	//Gather the filename list from the input directory information
 	std::string directory;
@@ -129,6 +107,7 @@ int main(int argc, char** argv) {
 		std::cout << "Unknown error occurred" << std::endl;
 		return 1;
 	}
+
 
 	//Iterate through the list of filenames from the list
 	for (std::string filename : filenameList) {
@@ -239,6 +218,11 @@ int main(int argc, char** argv) {
 				if (event.type == SDL_QUIT) RUNNING = false;
 			}
 		}
+
+		//Save the graph to a file
+		filectrl::saveGraphToFile(
+			filename, util::ABR_OUTPUT_EXT, util::ABR_OUTPUT_DIR, "bargraph", visualizer
+			);
 
 		//Clean up the dynamically allocated objects
 		SDL_DestroyTexture(visualizer);

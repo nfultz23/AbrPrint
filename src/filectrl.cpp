@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <utility>
 #include <SDL_Image.h>
+#include <cctype>
 
 #include "../filectrl.h"
 #include "../utils.h"
@@ -129,6 +130,23 @@ namespace filectrl {
 	void saveGraphToFile(
 		std::string sourceName, std::string fileType, std::string directory,
 		std::string graphType, SDL_Texture* graph
-	);
+	) {
+		//Exclude the original extension from the file name
+		int x; for (x = 0; x < sourceName.length(); x++)
+			if (sourceName[x] == '.') break;
+		std::string filename = sourceName.substr(0, x);
+
+		//Add the graph type to the end of the filename
+		filename += "_" + graphType + ".";
+		//Add the file extension to the end of the filename
+		for (char c : fileType) filename += std::tolower(c);
+		
+		//Create the full path to the file using the directory and name
+		std::string fullpath = directory + filename;
+
+
+
+		return;
+	}
 
 }
