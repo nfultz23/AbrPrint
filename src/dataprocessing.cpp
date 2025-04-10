@@ -99,88 +99,62 @@ namespace proc {
 	* Param img_h is the total height of the image
 	*/
 	void printGraphFrame(
-		SDL_Renderer* renderer, SDL_Texture* texture, graphData_t graphInfo, TTF_Font* font
+		SDL_Renderer* renderer, SDL_Texture* texture, graphData_t* graphInfo, TTF_Font* font
 		) {
-		//Store the points for the outer edge of the graph
-		SDL_Point points[3] = {
-			{graphInfo.framepos.x - ABR_GRAPH_THICKNESS,
-			 graphInfo.framepos.y},
-			
-			{graphInfo.framepos.x - ABR_GRAPH_THICKNESS,
-			 graphInfo.framepos.y + graphInfo.framepos.h + ABR_GRAPH_THICKNESS},
-
-			{graphInfo.framepos.x + graphInfo.framepos.w,
-			 graphInfo.framepos.y + graphInfo.framepos.h + ABR_GRAPH_THICKNESS}
-		};
-		util::polygon_t boundary = { points, 3 };
-		
-		for (int x = 0; x <= ABR_GRAPH_THICKNESS; x++) {
-			//Draw the current boundary
-			util::drawPolygon(renderer, texture, boundary, ABR_GRAPH_COLOR1);
-
-			//Shift the top-left boundary point
-			boundary.pointArr[0].x += 1;
-
-			//Shift the corner boundary point
-			boundary.pointArr[1].x += 1;
-			boundary.pointArr[1].y -= 1;
-			
-			//Shift the bottom-right boundary point
-			boundary.pointArr[2].y -= 1;
-		}
-
 		//Draw boundaries between the file columns
-		int colWidth = graphInfo.framepos.w / graphInfo.fileList.size();
-		for (size_t x = 0; x < graphInfo.fileList.size(); x++) {
+		int colWidth = graphInfo->framepos.w / graphInfo->fileList.size();
+		for (size_t x = 0; x < graphInfo->fileList.size(); x++) {
 			util::printText(
 				renderer, texture,
-				graphInfo.fileList[x],
-				graphInfo.framepos.x + x * colWidth + 20,
-				graphInfo.framepos.y + graphInfo.framepos.h + 5 + ABR_GRAPH_THICKNESS,
+				graphInfo->fileList[x].first,
+				graphInfo->framepos.x + x * colWidth + 20,
+				graphInfo->framepos.y + graphInfo->framepos.h + 5 + util::ABR_GRAPH_THICKNESS,
 				14, 40,
-				ABR_GRAPH_COLOR1,
+				util::ABR_GRAPH_COLOR1,
 				font,
 				nullptr
 				);
+			graphInfo->fileList[x].second = graphInfo->framepos.x + x * colWidth + 20;
 
 			///* //This section is for the debugging purposes, don't leave this in
 			SDL_Point top = {
-				graphInfo.framepos.x + (x + 1) * colWidth + ABR_GRAPH_THICKNESS,
-				graphInfo.framepos.y
+				graphInfo->framepos.x + (x + 1) * colWidth + util::ABR_GRAPH_THICKNESS,
+				graphInfo->framepos.y
 			};
 			SDL_Point bottom = {
-				graphInfo.framepos.x + (x + 1) * colWidth + ABR_GRAPH_THICKNESS,
-				graphInfo.framepos.y + graphInfo.framepos.h
+				graphInfo->framepos.x + (x + 1) * colWidth + util::ABR_GRAPH_THICKNESS,
+				graphInfo->framepos.y + graphInfo->framepos.h
 			};
-			util::drawLine(renderer, texture, top, bottom, ABR_GRAPH_COLOR2);
+			util::drawLine(renderer, texture, top, bottom, util::ABR_GRAPH_COLOR2);
 			//*/
 		}
 		util::drawLine(
 			renderer, texture,
-			{ graphInfo.framepos.x, graphInfo.framepos.y },
-			{ graphInfo.framepos.x + graphInfo.framepos.w, graphInfo.framepos.y },
-			ABR_GRAPH_COLOR2
+			{ graphInfo->framepos.x, graphInfo->framepos.y },
+			{ graphInfo->framepos.x + graphInfo->framepos.w, graphInfo->framepos.y },
+			util::ABR_GRAPH_COLOR2
 			);
 
 		//Draw the graph height markers and labels
-		int rowHeight = graphInfo.framepos.h / graphInfo.vertDivisions;
-		for (int x = 0; x <= graphInfo.vertDivisions; x++) {
+		int rowHeight = graphInfo->framepos.h / graphInfo->vertDivisions;
+		for (int x = 0; x <= graphInfo->vertDivisions; x++) {
 			//Get the endpoints of a horizontal line across the screen
 			SDL_Point left = {
-				graphInfo.framepos.x,
-				graphInfo.framepos.y + x * rowHeight
+				graphInfo->framepos.x,
+				graphInfo->framepos.y + x * rowHeight
 			};
 			SDL_Point right = {
-				graphInfo.framepos.x + graphInfo.framepos.w,
-				graphInfo.framepos.y + x * rowHeight
+				graphInfo->framepos.x + graphInfo->framepos.w,
+				graphInfo->framepos.y + x * rowHeight
 			};
 			//Draw the horizontal line
-			util::drawLine(renderer, texture, left, right, ABR_GRAPH_COLOR2);
+			util::drawLine(renderer, texture, left, right, util::ABR_GRAPH_COLOR2);
 
 			//Store the numeric value of the horizontal line as a double
-			double index = (graphInfo.rangeMax - graphInfo.rangeMin) / graphInfo.vertDivisions;
-			index *= graphInfo.vertDivisions - x;
-			index += graphInfo.rangeMin;
+			double index =
+				(graphInfo->rangeMax - graphInfo->rangeMin) / graphInfo->vertDivisions;
+			index *= graphInfo->vertDivisions - x;
+			index += graphInfo->rangeMin;
 			//Convert the numeric value of the mark, clipping it to 2 decimal points
 			string hLabel = std::to_string(index);
 			hLabel = hLabel.substr(0, hLabel.length() - 4);
@@ -189,13 +163,41 @@ namespace proc {
 			util::printText(
 				renderer, texture,
 				hLabel,
-				graphInfo.framepos.x - 20 - 5 * hLabel.length() - ABR_GRAPH_THICKNESS,
-				graphInfo.framepos.y + x * rowHeight - 5,
+				graphInfo->framepos.x - 20 - 5 * hLabel.length() - util::ABR_GRAPH_THICKNESS,
+				graphInfo->framepos.y + x * rowHeight - 5,
 				14, 0,
-				ABR_GRAPH_COLOR1,
+				util::ABR_GRAPH_COLOR1,
 				font,
 				nullptr
 				);
+		}
+
+		//Store the points for the outer edge of the graph
+		SDL_Point points[3] = {
+			{graphInfo->framepos.x,
+			 graphInfo->framepos.y},
+
+			{graphInfo->framepos.x,
+			 graphInfo->framepos.y + graphInfo->framepos.h + util::ABR_GRAPH_THICKNESS},
+
+			{graphInfo->framepos.x + graphInfo->framepos.w,
+			 graphInfo->framepos.y + graphInfo->framepos.h + util::ABR_GRAPH_THICKNESS}
+		};
+		util::polygon_t boundary = { points, 3 };
+
+		for (int x = 0; x < util::ABR_GRAPH_THICKNESS; x++) {
+			//Draw the current boundary
+			util::drawPolygon(renderer, texture, boundary, util::ABR_GRAPH_COLOR1);
+
+			//Shift the top-left boundary point
+			boundary.pointArr[0].x += 1;
+
+			//Shift the corner boundary point
+			boundary.pointArr[1].x += 1;
+			boundary.pointArr[1].y -= 1;
+
+			//Shift the bottom-right boundary point
+			boundary.pointArr[2].y -= 1;
 		}
 
 		return;
@@ -289,12 +291,15 @@ namespace proc {
 			
 			vector<double> currCol;
 			for (string s : table[x]) {
+
 				//If there were no hits found, add a zero to the value list
-				if (s == ".")
+				if (s == ".") {
 					currCol.push_back(0.0);
+				}
 				//If there is only a single hit in the table, convert it directly for the table
-				else if (!util::contains(s.c_str(), ';', s.length()))
+				else if (!util::contains(s.c_str(), ';', s.length())) {
 					currCol.push_back(std::stod(s));
+				}
 				//if there are several hits in the table, take the first (fix this later)
 				else {
 					int endpt = 0;
@@ -308,13 +313,18 @@ namespace proc {
 			rawdata.push_back(currCol);
 		}
 
+		if (rawdata.size() == 0) return vector<graphBar_t>();
+
 		//Calculate the width of a bar on the screen so it only has to be done once
-		const int entryWidth = (graphdata.framepos.w / table[0].size());
-		int barwidth = entryWidth - (entryWidth * 0.1);
-		if (rawdata[0].size() >= 2)
-			barwidth = (barwidth * (rawdata[0].size() / 2 + 1)) / rawdata[0].size();
-		else if (rawdata[0].size() == 2)
-			barwidth = (barwidth * 2) / 3;
+		const int entryWidth = (graphdata.framepos.w / graphdata.fileList.size()) + 1;
+		int barwidth = entryWidth - util::ABR_GRAPH_THICKNESS * 4;
+		int padding = (entryWidth - barwidth) / 2;
+
+		//barwidth /= rawdata.size();
+		barwidth /= rawdata.size() + (rawdata.size() > 3 ? 1 : 0);
+		int barpad = barwidth;
+		if (rawdata.size() > 3) barwidth *= 2;
+
 
 		//Create a vector to store the bars, they will be graphed label-by-label
 		vector<graphBar_t> graphList;
@@ -323,21 +333,22 @@ namespace proc {
 		for (int x = 0; x < rawdata.size(); x++) {
 			for (int y = 0; y < rawdata[x].size(); y++) {
 				//If the current entry is zero, move on
-				if (rawdata[x][y] == 0) continue;
+				if (rawdata[x][y] == 0) { continue; }
 
 				//Update the horizontal position based on the file being displayed
-				int xpos = ABR_GRAPH_THICKNESS + graphdata.framepos.x;
-				xpos += (entryWidth * y) + (entryWidth * 0.05) + xoffset;
-				if (y == 0) xpos -= ABR_GRAPH_THICKNESS;
+				int xpos = graphdata.fileList[y].second - 15 + padding;
+				xpos += barpad * x;
 
 				//Calculate the height of the bar
 				double range = graphdata.rangeMax - graphdata.rangeMin;
 				int height = 0;
 				if (rawdata[x][y] != 0)
-					height = graphdata.framepos.h * ((double)(rawdata[x][y] - graphdata.rangeMin) / range);
+					height = graphdata.framepos.h * (
+						(double)(rawdata[x][y] - graphdata.rangeMin) / range
+						);
 				
 				//Calculate the top position of the bar
-				int ypos = graphdata.framepos.y + (graphdata.framepos.h - height);
+				int ypos = graphdata.framepos.y + (graphdata.framepos.h - height) + 1;
 
 				//Gather the bar's rect
 				SDL_Rect barRect = { xpos, ypos, barwidth, height };
@@ -346,12 +357,12 @@ namespace proc {
 				newBar.label = labels[x + 2];
 				newBar.value = rawdata[x][y];
 				newBar.barRect = barRect;
-				newBar.color = ABR_BAR_COLORS[x];
+				newBar.color = util::ABR_BAR_COLORS[x];
 
 				graphList.push_back(newBar);
 			}
 			//Increase the offset so the bars are all equally visible
-			xoffset += (entryWidth - barwidth) / rawdata.size() * x * (2.0 / 3.0);
+			xoffset += barwidth;
 		}
 
 		//Return the compiled list of bars
@@ -397,9 +408,9 @@ namespace proc {
 		graphData_t graphinfo, TTF_Font* font
 	) {
 		//Store the starting positions of the graph and the sizing for both color tiles and text
-		int xpos = graphinfo.framepos.x, ypos = graphinfo.framepos.y - 60;
-		int colw = 15, colh = 15;
-		int fontsize = 16;
+		int xpos = graphinfo.framepos.x, ypos = graphinfo.framepos.y - 70;
+		int colw = 10, colh = 10;
+		int fontsize = 14;
 
 		//Iterate through each database field in the labels list
 		for (int x = 2; x < labels.size(); x++) {
@@ -407,7 +418,7 @@ namespace proc {
 			SDL_Rect colTileRect = { xpos, ypos + (fontsize - colh) / 2, colw, colh };
 			//Draw the color tile and move the xposition to where the new text will be printed
 			try {
-				util::fillRect(renderer, texture, colTileRect, ABR_BAR_COLORS[x - 2]);
+				util::fillRect(renderer, texture, colTileRect, util::ABR_BAR_COLORS[x - 2]);
 			}
 			//Handle potential errors and throw them up the chain
 			catch (std::string err) {
@@ -425,7 +436,7 @@ namespace proc {
 			SDL_Rect textRect;
 			try {
 				util::printText(renderer, texture, labels[x], xpos, ypos, fontsize,
-								0, ABR_GRAPH_COLOR1, font, &textRect);
+								0, util::ABR_GRAPH_COLOR1, font, &textRect);
 			}
 			//Handle potential errors and throw them up the chain
 			catch (std::string err) {
@@ -441,6 +452,11 @@ namespace proc {
 
 			//Advance the x-position to the other side of the text, adding padding
 			xpos += textRect.w + 25;
+
+			if (xpos >= graphinfo.framepos.w * 0.9) {
+				xpos = graphinfo.framepos.x;
+				ypos += fontsize * 1.5;
+			}
 		}
 
 		return;
@@ -473,9 +489,10 @@ namespace proc {
 				util::printText(renderer, texture,
 					std::to_string(bar.value).substr(0, std::to_string(bar.value).length() - 4), //I don't want to talk about it
 					bar.barRect.x + 5,
-					bar.barRect.y + 5, 14, 0, ABR_GRAPH_COLOR1, font, nullptr);
+					bar.barRect.y + 5, 14, 0, util::ABR_GRAPH_COLOR1, font, nullptr);
 		}
 
 		return;
 	}
+
 }

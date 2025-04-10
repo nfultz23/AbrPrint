@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include "./utils.h"
 
@@ -15,27 +16,9 @@
 namespace proc {
 	using std::vector; using std::string; using std::ifstream;
 
-	static const util::color_t ABR_BKGD_COLOR = { 220, 235, 240, 255 };
-	static const util::color_t ABR_GRAPH_COLOR1 = { 40, 50, 80, 255 };
-	static const util::color_t ABR_GRAPH_COLOR2 = { 185, 200, 225, 255 };
-
-	static const util::color_t ABR_BAR_COLORS[] = {
-		{160,  60,  60, 255},
-		{190, 120,  40, 255},
-		{160, 170,  40, 255},
-		{ 60, 150,  40, 255},
-		{ 60, 200, 195, 255},
-		{ 50,  60, 145, 255},
-		{120,  60, 170, 255},
-		{150,  60, 150, 255}
-	};
-
-	static const int ABR_GRAPH_PADDING = 150;
-	static const int ABR_GRAPH_THICKNESS = 5;
-
 	struct graphData_t {
 		SDL_Rect framepos;
-		std::vector<std::string> fileList;
+		std::vector<std::pair<std::string, int>> fileList;
 		int vertDivisions;
 		double rangeMin, rangeMax;
 	};
@@ -82,7 +65,7 @@ namespace proc {
 	* Param img_h is the total height of the image
 	*/
 	void printGraphFrame(
-		SDL_Renderer* renderer, SDL_Texture* texture, graphData_t graphInfo, TTF_Font* font
+		SDL_Renderer* renderer, SDL_Texture* texture, graphData_t* graphInfo, TTF_Font* font
 		);
 
 
@@ -145,7 +128,17 @@ namespace proc {
 	);
 
 
-	/*
+	/*Prints a list of bars to the provided surface, including their values if the flag is set
+	*
+	* Precondition: renderer != nullptr AND texture != nullptr AND
+	*		(font == nullptr IFF printVals == false)
+	* Postcondition: The bars are rendered onto the screen, with the value if specified
+	*
+	* Param renderer is the SDL_Renderer required to render onto a surface
+	* Param texture is the SDL_Texture that will recieve the bars
+	* Param barsList is a vector containing populated graphBar_t objects
+	* Param font is a TTF_Font that the values will be printed in (nullptr if printVals is false)
+	* Param printVals is a bool representing whether the bar values will be printed
 	*/
 	void printBars(
 		SDL_Renderer* renderer, SDL_Texture* texture, vector<graphBar_t> barsList,

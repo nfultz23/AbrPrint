@@ -5,28 +5,18 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 #include <SDL_ttf.h>
+#include <vector>
 
-#include <string>
-#include <iostream>
-#include <utility>
+#include "./configuration.h"
 
 
 namespace util {
-
-	//This struct contains information about a color for rendering
-	struct color_t {
-		uint16_t r, g, b, a;
-	};
 
 	//This struct contains information about a polygon
 	struct polygon_t {
 		SDL_Point* pointArr;
 		int numPoints;
 	};
-
-	const std::string ABR_TYPEFACE_DIR = "./typefaces/";
-	const int IMG_W = 1200;
-	const int IMG_H = 800;
 
 
 	/*Constructs an SDL_Window pointer that can be used to display the working surface for
@@ -36,7 +26,7 @@ namespace util {
 	*
 	* Returns a pointer to an SDL2 window object
 	*/
-	inline SDL_Window* generateWindow() {
+	static SDL_Window* generateWindow() {
 		//Generate the SDL Window
 		SDL_Window* window = SDL_CreateWindow(
 			"AbrPrint",
@@ -61,7 +51,7 @@ namespace util {
 	* Param window is a pointer to the SDL2 window that the renderer will render to
 	* Returns a pointer to the new SDL2 Renderer
 	*/
-	inline SDL_Renderer* generateRenderer(SDL_Window* window) {
+	static SDL_Renderer* generateRenderer(SDL_Window* window) {
 		//Generate the SDL Renderer
 		SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_TARGETTEXTURE);
 
@@ -80,14 +70,15 @@ namespace util {
 	* Param renderer is the renderer that the texture will link to
 	* Returns a pointer to a texture created, attached to the renderer
 	*/
-	inline SDL_Texture* generateTexture(SDL_Renderer* renderer) {
+	static SDL_Texture* generateTexture(SDL_Renderer* renderer) {
 		//Generate the SDL Texture
 		SDL_Texture* texture =
 			SDL_CreateTexture(
 				renderer,
 				SDL_PIXELFORMAT_RGBA8888,
 				SDL_TEXTUREACCESS_TARGET,
-				IMG_W, IMG_H);
+				IMG_W, IMG_H
+			);
 
 		//Ensure that the texture was created successfully
 		if (!texture) throw "util::generateTexture(): " + (std::string)SDL_GetError();
@@ -103,7 +94,7 @@ namespace util {
 	* Param renderer is the renderer that will handle render actions to the display window
 	* Param texture is the texture being rendered onto the display window0
 	*/
-	inline void renderTexture(SDL_Renderer* renderer, SDL_Texture* texture) {
+	static void renderTexture(SDL_Renderer* renderer, SDL_Texture* texture) {
 		SDL_Rect rect;
 		rect.x = 0; rect.y = 0;
 		rect.w = IMG_W; rect.h = IMG_H;
@@ -132,8 +123,9 @@ namespace util {
 	* Param p0 is an SDL_Point that is the first in the line
 	* Param p1 is an SDL_Point that is the second in the line
 	*/
-	inline void drawLine(
-		SDL_Renderer* renderer, SDL_Texture* texture, SDL_Point p0, SDL_Point p1, color_t color
+	static void drawLine(
+		SDL_Renderer* renderer, SDL_Texture* texture, SDL_Point p0,
+		SDL_Point p1, color_t color
 	) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
@@ -163,7 +155,7 @@ namespace util {
 	* Param polygon is a struct that stores the points contained in the polygon
 	* Param color is the color of the lines on the polygon
 	*/
-	inline void drawPolygon(
+	static void drawPolygon(
 		SDL_Renderer* renderer, SDL_Texture* texture, polygon_t polygon, color_t color
 	) {
 		//Draw each line in the polygon
@@ -187,7 +179,8 @@ namespace util {
 	* Param rect is the SDL_Rect that will be drawn
 	* Param color is the color of the lines on the polygon
 	*/
-	inline void fillRect(SDL_Renderer* renderer, SDL_Texture* texture, SDL_Rect rect, color_t color) {
+	static void fillRect(SDL_Renderer* renderer, SDL_Texture* texture,
+		SDL_Rect rect, const color_t color) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
 		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -212,7 +205,7 @@ namespace util {
 	* Param texture is a pointer to the texture being colored
 	* Param color is the color filling the surface
 	*/
-	inline void fill(SDL_Renderer* renderer, SDL_Texture* texture, color_t color) {
+	static void fill(SDL_Renderer* renderer, SDL_Texture* texture, color_t color) {
 		//Set the render target to the texture and set the render color
 		SDL_SetRenderTarget(renderer, texture);
 		SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
@@ -237,7 +230,7 @@ namespace util {
 	* Param size is the size of the font being loaded
 	* Returns a pointer to the TTF_Font that contains the loaded typeface information
 	*/
-	inline TTF_Font* getFont(std::string fontName, int size) {
+	static TTF_Font* getFont(std::string fontName, int size) {
 		//Create the font pointer
 		TTF_Font* font = TTF_OpenFont((ABR_TYPEFACE_DIR + fontName + ".ttf").c_str(), 24);
 		if (!font) throw "util::getFont(): " + (std::string)TTF_GetError();
@@ -267,7 +260,7 @@ namespace util {
 	* Param resBlock is an optional pointer to a rect that will be populated with the
 	*		text's destination (will not work for rotated text)
 	*/
-	inline void printText(
+	static void printText(
 		SDL_Renderer* renderer, SDL_Texture* texture, std::string text,
 		int x, int y, int size, int angle, color_t color, TTF_Font* font,
 		SDL_Rect* resBlock
@@ -333,6 +326,6 @@ namespace util {
 		return;
 	}
 
-}
+};
 
 #endif
