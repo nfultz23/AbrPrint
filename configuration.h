@@ -21,6 +21,7 @@ namespace util {
 	extern std::string ABR_TYPEFACE_NAME;
 	extern std::string ABR_OUTPUT_DIR;
 	extern std::string ABR_OUTPUT_EXT;
+	extern bool ABR_RUN_DEBUG;
 
 	extern bool batch;
 	extern bool raw;
@@ -162,7 +163,8 @@ namespace util {
 
 
 	/*Initializes the active environment variables based on their information
-	*  in the configuration file
+	*  in the configuration file. THIS MUST BE THE FIRST FUNCTION CALL OF THE
+	*  SYSTEM. THE ONLY THING THAT COMES BEFORE IS AbrPrint_HandleCLO();
 	*
 	* Precondition: AbrPrint.cfg should be in the same directory as the executable
 	* Postcondition: All environment variables (The ones defined in this file) are updated
@@ -206,7 +208,8 @@ namespace util {
 	}
 
 
-	/*Handle command line options from a passed in set of flags
+	/*Handle command line options from a passed in set of flags. THIS MUST BE THE
+	*  VERY FIRST FUNCTION CALL OF THE SYSTEM. THIS COMES BEFORE AbrPrint_Init()
 	*/
 	static int AbrPrint_HandleCLO(
 		int argc, char** argv, std::string* source, bool* batch, bool* raw, bool* flagsUsed
@@ -253,6 +256,8 @@ namespace util {
 				std::cout << " -h   --help [opt]    Makes this help menu. You can provide a flag" << std::endl;
 				std::cout << "                      to get more information on how it works" << std::endl;
 				std::cout << std::endl;
+				std::cout << " -v   --verbose OR --debug        Sends a debug log into the console" << std::endl;
+				std::cout << "                                  during execution" << std::endl;
 				std::cout << " -d   --set-source-dir [path]     Sets the directory for the source" << std::endl;
 				std::cout << "                                  files to the path provided" << std::endl;
 				std::cout << " -o   --set-output-dir [path]     Sets the directory that the graphs" << std::endl;
@@ -421,6 +426,18 @@ namespace util {
 					std::cout << std::endl;
 
 				}
+
+				else if (arg == "-v" || arg == "--debug" || arg == "--verbose") {
+					std::cout << std::endl;
+					std::cout << "AbrPrint -v or --verbose or --debug flag" << std::endl;
+					std::cout << std::endl;
+					std::cout << "AbrPrint does lots of things from when you input the filename to when" << std::endl;
+					std::cout << " it outputs the graph. If things are going wrong, this flag is used " << std::endl;
+					std::cout << " to check what happened, and where AbrPrint ran into an issue. This " << std::endl;
+					std::cout << " flag shouldn't be too useful to you most of the time, but could be " << std::endl;
+					std::cout << " interesting if you're curious about AbrPrint's inner functions." << std::endl;
+					std::cout << std::endl;
+				}
 			}
 
 			else
@@ -584,6 +601,12 @@ namespace util {
 						throw "Error updating file extension type in configuration file";
 
 					usedFlag = true;
+				}
+
+				//Handle debug mode
+				if (currItem == "-v" || currItem == "--verbose" || currItem == "--debug") {
+					//Set the global debug boolean to true
+					ABR_RUN_DEBUG = true;
 				}
 			}
 		}

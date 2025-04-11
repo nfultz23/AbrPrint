@@ -18,7 +18,10 @@ namespace proc {
 	* Returns a string vector containing the data's column labels
 	*/
 	vector<string> makeLabels(string filename, ifstream* src) {
+		util::debug(1, "makeLabels():");
+
 		//Read in the entire header from the file being processed
+		util::debug(1, "  Ensuring that the file has a header to read");
 		char header[4096];
 		if (!(*src).getline(header, sizeof(header)))
 			throw "proc::makeLabels(): " + filename + " appears to be empty";
@@ -28,11 +31,13 @@ namespace proc {
 			throw "proc::makeLabels(): " + filename + " does not contain a header to process";
 
 		//Parse through the header line and create a vector to store the header labels
+		util::debug(1, "  Parsing through the header to store labels");
 		vector<string> labels; string currHeader = "";
 		for (size_t x = 1; x < strlen(header); x++) {
 			//If a delimiter is found, separate it and push it into the label vector
 			if (header[x] == '\t' || x == strlen(header) - 1) {
 				labels.push_back(currHeader);
+				util::debug(1, "    Label found to be " + currHeader);
 				currHeader = "";
 				continue;
 			}
@@ -40,6 +45,7 @@ namespace proc {
 			currHeader += header[x];
 		}
 
+		util::debug(1, "  Header parsed, returning...");
 		return labels;
 	}
 
@@ -55,11 +61,15 @@ namespace proc {
 	*   its respective label) and the second matching the row in the source file
 	*/
 	vector<vector<string>> makeTable(string filename, vector<string> labels, ifstream* src) {
+		util::debug(1, "makeTable():");
 
+		//Create an empty vector for each label for population later
+		util::debug(1, "  Creating a list of data tables to populate");
 		vector<vector<string>> table;
 		for (size_t x = 0; x < labels.size(); x++) table.push_back(vector<string>());
 
 		//Iterate through the file to populate the table
+		util::debug(1, "  Populating data table from input file");
 		string currEntry;
 		int i = 0;
 		while ((*src) >> currEntry) {
@@ -69,12 +79,14 @@ namespace proc {
 		}
 
 		//Clean up the absolute file paths from the source file
+		util::debug(1, "  Discovering the file index");
 		int fileIndex = 0;
 		for (size_t x = 0; x < labels.size(); x++) {
 			if (labels[x] == "FILE") { fileIndex = x; break; }
 		}
 
 		//Iterate through the file column and erase the absolute file paths
+		util::debug(1, "  Triming paths from the filenames");
 		for (int x = 0; x < table[fileIndex].size(); x++) {
 			//Find the index of the string where the file path ends
 			string currString = table[fileIndex][x];
@@ -85,6 +97,7 @@ namespace proc {
 			table[fileIndex][x] = currString.substr(i, currString.length());
 		}
 
+		util::debug(1, "  Table populated, returning...");
 		return table;
 	}
 
@@ -101,9 +114,14 @@ namespace proc {
 	void printGraphFrame(
 		SDL_Renderer* renderer, SDL_Texture* texture, graphData_t* graphInfo, TTF_Font* font
 		) {
+		util::debug(1, "printGraphFrame():");
+
 		//Draw boundaries between the file columns
+		util::debug(1, "  Generating horizontal divisions");
 		int colWidth = graphInfo->framepos.w / graphInfo->fileList.size();
 		for (size_t x = 0; x < graphInfo->fileList.size(); x++) {
+			util::debug(1, "  Handling label " + graphInfo->fileList[x].first);
+			util::debug(1, "    Printing label text");
 			util::printText(
 				renderer, texture,
 				graphInfo->fileList[x].first,
@@ -116,7 +134,7 @@ namespace proc {
 				);
 			graphInfo->fileList[x].second = graphInfo->framepos.x + x * colWidth + 20;
 
-			///* //This section is for the debugging purposes, don't leave this in
+			util::debug(1, "    Drawing vertical division");
 			SDL_Point top = {
 				graphInfo->framepos.x + (x + 1) * colWidth + util::ABR_GRAPH_THICKNESS,
 				graphInfo->framepos.y
@@ -126,8 +144,9 @@ namespace proc {
 				graphInfo->framepos.y + graphInfo->framepos.h
 			};
 			util::drawLine(renderer, texture, top, bottom, util::ABR_GRAPH_COLOR2);
-			//*/
+
 		}
+		util::debug(1, "  Drawing graph cap line");
 		util::drawLine(
 			renderer, texture,
 			{ graphInfo->framepos.x, graphInfo->framepos.y },
@@ -136,8 +155,10 @@ namespace proc {
 			);
 
 		//Draw the graph height markers and labels
+		util::debug(1, "  Drawing graph height markers");
 		int rowHeight = graphInfo->framepos.h / graphInfo->vertDivisions;
 		for (int x = 0; x <= graphInfo->vertDivisions; x++) {
+			util::debug(1, "    Drawing horizontal line across the graph frame");
 			//Get the endpoints of a horizontal line across the screen
 			SDL_Point left = {
 				graphInfo->framepos.x,
@@ -151,6 +172,7 @@ namespace proc {
 			util::drawLine(renderer, texture, left, right, util::ABR_GRAPH_COLOR2);
 
 			//Store the numeric value of the horizontal line as a double
+			util::debug(1, "    Calculating numeric value of horizontal division");
 			double index =
 				(graphInfo->rangeMax - graphInfo->rangeMin) / graphInfo->vertDivisions;
 			index *= graphInfo->vertDivisions - x;
@@ -160,6 +182,7 @@ namespace proc {
 			hLabel = hLabel.substr(0, hLabel.length() - 4);
 
 			//Print the text label for the horizontal mark
+			util::debug(1, "    Printing horizontal division");
 			util::printText(
 				renderer, texture,
 				hLabel,
@@ -173,6 +196,7 @@ namespace proc {
 		}
 
 		//Store the points for the outer edge of the graph
+		util::debug(1, "  Printing initial left-bottom sides of the graph");
 		SDL_Point points[3] = {
 			{graphInfo->framepos.x,
 			 graphInfo->framepos.y},
@@ -185,6 +209,7 @@ namespace proc {
 		};
 		util::polygon_t boundary = { points, 3 };
 
+		util::debug(1, "  Increasing main frame thickness");
 		for (int x = 0; x < util::ABR_GRAPH_THICKNESS; x++) {
 			//Draw the current boundary
 			util::drawPolygon(renderer, texture, boundary, util::ABR_GRAPH_COLOR1);
@@ -200,6 +225,7 @@ namespace proc {
 			boundary.pointArr[2].y -= 1;
 		}
 
+		util::debug(1, "  Graph frame printed, returning...");
 		return;
 	}
 
@@ -213,16 +239,20 @@ namespace proc {
 	* Param graphdata is the a data structure whose range values will be populated
 	*/
 	void getDataRange(vector<vector<string>> table, graphData_t* graphdata) {
+		util::debug(1, "getDataRange():");
+
 		//Initialize the minimum and maximum values to null values
 		double min = 0, max = 0;
 
 		//Set a value to track the initialization of the min/max values
 		bool first = true;
+		util::debug(1, "  Parsing data to gather data range");
 		for (int x = 2; x < table.size(); x++) {
 			for (int y = 0; y < table[x].size(); y++) {
 				
 				//If no value was found in the Abricate processing, skip past the entry
 				if (table[x][y] == ".") {
+					util::debug(1, "    Null value found, moving on to next entry in the table");
 					continue;
 				}
 
@@ -231,6 +261,7 @@ namespace proc {
 				//If multiple values have been found, take the first and convert it to a double
 				// This will probably change later when I decide on how to handle multiple hits
 				if (util::contains(table[x][y].c_str(), ';', table[x][y].size())) {
+					util::debug(1, "    Multivalue entry found, taking first numeric value");
 					int endpt = 0;
 					for (char c : table[x][y]) {
 						if (c == ';') break;
@@ -240,29 +271,51 @@ namespace proc {
 					currVal = std::stod(table[x][y].substr(0, endpt));
 				}
 				//If a single value has been found, convert it to a double directly
-				else currVal = std::stod(table[x][y]);
+				else {
+					util::debug(1, "    Single value entry found");
+					currVal = std::stod(table[x][y]);
+				}
 
 				//If this is the first value found, initialize the min and max values
 				if (first) {
+					util::debug(1, "    First numeiric entry found, initializing range values");
 					min = currVal; max = currVal;
 					first = false;
 				}
 
+				util::debug(1, "    Adjusting range values");
 				//Check whether the maximum value is greater than the current maximum
-				if (currVal > max) max = currVal;
+				if (currVal > max) {
+					util::debug(1, "      Increasing maximum range value");
+					max = currVal;
+				}
 				//Check whether the minimum value is less than the current minimum
-				if (currVal < min) min = currVal;
+				if (currVal < min) {
+					util::debug(1, "      Decreasing minimum range value");
+					min = currVal;
+				}
+
+				util::debug(1, "    Entry properly parsed, moving on");
 			}
 		}
+		util::debug(1, "  Finished parsing table");
 
+		util::debug(1, "  Calculating range margin for display padding");
 		double margin = 0.0;
 		//If the min and max are the same, add 5% padding on either side
-		if (max == min) margin = 5.0;
+		if (max == min) {
+			util::debug(1, "    Range found to be zero, storing absolute 5% margin");
+			margin = 5.0;
+		}
 		//If there is a range of values, add 25% of the range as padding
-		else margin = (max - min) * 0.25;
+		else {
+			util::debug(1, "    Range found to be greater than zero, storing 25% of range as margin");
+			margin = (max - min) * 0.25;
+		}
 
 		//Add the padding to the value, ensuring that the range does not
 		// exceed 100% or 0% certainty values
+		util::debug(1, "  Ensuring range expansion does not exit the bounds");
 		graphdata->rangeMax = (max + margin < 100.0 ? max + margin : 100.0);
 		graphdata->rangeMin = (min - margin > 000.0 ? min - margin : 100.0);
 
@@ -284,9 +337,11 @@ namespace proc {
 	vector<graphBar_t> generateBars(
 		graphData_t graphdata, vector<string> labels, vector<vector<string>> table
 		) {
+		util::debug(1, "generateBars()");
 
 		//Process the table into raw data
 		vector<vector<double>> rawdata;
+		util::debug(1, "  Processing passed-in table into raw data");
 		for (int x = 2; x < labels.size(); x++) {
 			
 			vector<double> currCol;
@@ -294,14 +349,17 @@ namespace proc {
 
 				//If there were no hits found, add a zero to the value list
 				if (s == ".") {
+					util::debug(1, "    Null value entryfound, interpreting as 0.0");
 					currCol.push_back(0.0);
 				}
 				//If there is only a single hit in the table, convert it directly for the table
 				else if (!util::contains(s.c_str(), ';', s.length())) {
+					util::debug(1, "    Single value entry found");
 					currCol.push_back(std::stod(s));
 				}
 				//if there are several hits in the table, take the first (fix this later)
 				else {
+					util::debug(1, "    Multivalue entry found, taking first numeric value");
 					int endpt = 0;
 					for (char c : s) {
 						if (c == ';') break;
@@ -312,10 +370,15 @@ namespace proc {
 			}
 			rawdata.push_back(currCol);
 		}
+		util::debug(1, "  Table successfully parsed into raw data");
 
-		if (rawdata.size() == 0) return vector<graphBar_t>();
+		if (rawdata.size() == 0) {
+			util::debug(1, "  Parsed table found to be empty, returning...");
+			return vector<graphBar_t>();
+		}
 
 		//Calculate the width of a bar on the screen so it only has to be done once
+		util::debug(1, "  Calculating bar width");
 		const int entryWidth = (graphdata.framepos.w / graphdata.fileList.size()) + 1;
 		int barwidth = entryWidth - util::ABR_GRAPH_THICKNESS * 4;
 		int padding = (entryWidth - barwidth) / 2;
@@ -329,17 +392,23 @@ namespace proc {
 		//Create a vector to store the bars, they will be graphed label-by-label
 		vector<graphBar_t> graphList;
 		//Parse through the data to create bars for rendering
+		util::debug(1, "  Generating displayable bars");
 		int xoffset = 0;
 		for (int x = 0; x < rawdata.size(); x++) {
 			for (int y = 0; y < rawdata[x].size(); y++) {
 				//If the current entry is zero, move on
-				if (rawdata[x][y] == 0) { continue; }
+				if (rawdata[x][y] == 0) {
+					util::debug(1, "    Bar value found to be zero, moving on to next entry");
+					continue;
+				}
 
 				//Update the horizontal position based on the file being displayed
+				util::debug(1, "    Calculating horizontal bar position");
 				int xpos = graphdata.fileList[y].second - 15 + padding;
 				xpos += barpad * x;
 
 				//Calculate the height of the bar
+				util::debug(1, "    Calculating bar height");
 				double range = graphdata.rangeMax - graphdata.rangeMin;
 				int height = 0;
 				if (rawdata[x][y] != 0)
@@ -348,11 +417,14 @@ namespace proc {
 						);
 				
 				//Calculate the top position of the bar
+				util::debug(1, "    Calculating vertical bar position");
 				int ypos = graphdata.framepos.y + (graphdata.framepos.h - height) + 1;
 
 				//Gather the bar's rect
+				util::debug(1, "    Storing bar data");
 				SDL_Rect barRect = { xpos, ypos, barwidth, height };
 
+				util::debug(1, "    Storing bar metadata");
 				graphBar_t newBar;
 				newBar.label = labels[x + 2];
 				newBar.value = rawdata[x][y];
@@ -366,6 +438,7 @@ namespace proc {
 		}
 
 		//Return the compiled list of bars
+		util::debug(1, "  Bar list successfully generated, returning...");
 		return graphList;
 	}
 
@@ -386,7 +459,10 @@ namespace proc {
 	* Returns nothing
 	*/
 	void focusShortBars(vector<graphBar_t>* barsList) {
+		util::debug(1, "focusShortBars()");
+		util::debug(1, "  Sorting bars by height, tallest to shortest");
 		std::sort(barsList->begin(), barsList->end(), isShorter);
+		util::debug(1, "  Bars sorted, returning...");
 	}
 
 
@@ -406,18 +482,25 @@ namespace proc {
 	void printKeys(
 		SDL_Renderer* renderer, SDL_Texture* texture, vector<string> labels,
 		graphData_t graphinfo, TTF_Font* font
-	) {
+		) {
+		util::debug(1, "printKeys():");
+
 		//Store the starting positions of the graph and the sizing for both color tiles and text
+		util::debug(1, "  Storing key starting position, as well as sizing information");
 		int xpos = graphinfo.framepos.x, ypos = graphinfo.framepos.y - 70;
 		int colw = 10, colh = 10;
 		int fontsize = 14;
 
 		//Iterate through each database field in the labels list
+		util::debug(1, "  Iterating through labels");
 		for (int x = 2; x < labels.size(); x++) {
+			util::debug(1, "  Handling label " + labels[x]);
+
 			//Create a color tile rect with a proper position, centering it with the text
 			SDL_Rect colTileRect = { xpos, ypos + (fontsize - colh) / 2, colw, colh };
 			//Draw the color tile and move the xposition to where the new text will be printed
 			try {
+				util::debug(1, "    Drawing bar color");
 				util::fillRect(renderer, texture, colTileRect, util::ABR_BAR_COLORS[x - 2]);
 			}
 			//Handle potential errors and throw them up the chain
@@ -435,6 +518,7 @@ namespace proc {
 			//Print the label of the database and store the destination rect of the text
 			SDL_Rect textRect;
 			try {
+				util::debug(1, "    Printing label text");
 				util::printText(renderer, texture, labels[x], xpos, ypos, fontsize,
 								0, util::ABR_GRAPH_COLOR1, font, &textRect);
 			}
@@ -448,17 +532,20 @@ namespace proc {
 			catch (...) {
 				throw "proc::printKeuys(): Unknown error occurred while rendering label text";
 			}
-			xpos += colw + 5;
 
+			util::debug(1, "    Shifting horizontal index forward");
+			xpos += colw + 5;
 			//Advance the x-position to the other side of the text, adding padding
 			xpos += textRect.w + 25;
 
 			if (xpos >= graphinfo.framepos.w * 0.9) {
+				util::debug(1, "      Horizontal position exited range, moving to a new line");
 				xpos = graphinfo.framepos.x;
 				ypos += fontsize * 1.5;
 			}
 		}
 
+		util::debug(1, "  Key successfully printed, returning...");
 		return;
 	}
 
@@ -478,20 +565,27 @@ namespace proc {
 	void printBars(
 		SDL_Renderer* renderer, SDL_Texture* texture, vector<graphBar_t> barsList,
 		TTF_Font* font, bool printVals
-	) {
+		) {
+		util::debug(1, "printBars()");
+
 		//Iterate through each bar in the list
+		util::debug(1, "  Iterating through the passed-in list of bars");
 		for (graphBar_t bar : barsList) {
+			util::debug(1, "    Rendering bar to screen");
 			//Print the bar itself
 			util::fillRect(renderer, texture, bar.barRect, bar.color);
 
 			//Print the value of the bar if instructed to do so
-			if (printVals)
+			if (printVals) {
+				util::debug(1, "    Printing bar hit value");
 				util::printText(renderer, texture,
 					std::to_string(bar.value).substr(0, std::to_string(bar.value).length() - 4), //I don't want to talk about it
 					bar.barRect.x + 5,
 					bar.barRect.y + 5, 14, 0, util::ABR_GRAPH_COLOR1, font, nullptr);
+			}
 		}
 
+		util::debug(1, "  Bars successfully printed, returning...");
 		return;
 	}
 

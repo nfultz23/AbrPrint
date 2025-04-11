@@ -17,6 +17,7 @@ namespace util {
 	std::string ABR_TYPEFACE_NAME = "Consolas";
 	std::string ABR_OUTPUT_DIR = "./";
 	std::string ABR_OUTPUT_EXT = "PNG";
+	bool ABR_RUN_DEBUG = false;
 
 	bool batch = false;
 	bool raw = false;
@@ -57,6 +58,7 @@ int main(int argc, char** argv) {
 		util::AbrPrint_Init();
 
 		//Initialize the graphics and text library
+		util::debug(1, "Initializing graphics libraries");
 		if (SDL_Init(SDL_INIT_VIDEO) < 0) throw "main(): " + (string)SDL_GetError();
 		if (TTF_Init() < 0) throw "main(): " + (string)TTF_GetError();
 	}
@@ -77,6 +79,7 @@ int main(int argc, char** argv) {
 	//Gather the filename list from the input directory information
 	std::string directory;
 	std::vector<std::string> filenameList;
+	util::debug(1, "Beginning to gather list of filenames");
 	try {
 		if (source == "" && !util::flagsUsed) util::batch = true;
 
@@ -102,6 +105,11 @@ int main(int argc, char** argv) {
 			std::cout << "Unknown error occurred" << std::endl;
 			return 1;
 		}
+
+		util::debug(1, "File names gathered:");
+		for (std::string name : filenameList)
+			util::debug(1, "- " + name);
+		util::debug(1, "");
 	}
 	catch (...) {
 		std::cout << "Unknown error occurred" << std::endl;
@@ -109,25 +117,58 @@ int main(int argc, char** argv) {
 	}
 
 
+	//Generate some of the things necessary for creating graphs
+	SDL_Surface* surf; SDL_Renderer* renderer; SDL_Texture* visualizer; TTF_Font* font;
+	util::debug(1, "Creating necessary SDL2 graphics elements");
+	try {
+		util::debug(1, "  Generating the renderer");
+		renderer = util::generateRenderer(&surf);
+
+		util::debug(1, "  Generating the visualizer");
+		visualizer = util::generateTexture(renderer);
+
+		util::debug(1, "  Generating the typeface");
+		font = util::getFont("Consolas", 24);
+	}
+	catch (const char* err) {
+		std::cout << err << std::endl;
+		return 1;
+	}
+	catch (string err) {
+		std::cout << err << std::endl;
+		return 1;
+	}
+	catch (...) {
+		std::cout << "Unknown error occurred" << std::endl;
+		return 1;
+	}
+	util::debug(1, "  All elements successfully created\n");
+
 	//Iterate through the list of filenames from the list
+	util::debug(1, "Beginning graph generation");
 	for (std::string filename : filenameList) {
+		util::debug(1, "Processing file " + filename);
 
 		//Gather the file's labels and populate a table for the data
 		vector<string> labels;
 		vector<vector<string>> table;
-		//std::string filename;
+		util::debug(1, "Parsing data from file");
 		try {
 			//Use the filename to open the source file
+			util::debug(1, "Opening input stream");
 			ifstream src = filectrl::loadFile(directory, filename);
 
 			//Read in the entire header from the file being processed
+			util::debug(1, "Gathering data labels from the file");
 			labels = proc::makeLabels(filename, &src);
 
 			//Create a 2D vector table. The outer vector will be the columns, each identified
 			// with the index of their title in the labels vector. The inner vector will be
 			// the data itself
+			util::debug(1, "Gathering data from the file");
 			table = proc::makeTable(filename, labels, &src);
 			
+			util::debug(1, "Closing file input stream");
 			src.close();
 		}
 		catch (const char* err) {
@@ -142,17 +183,13 @@ int main(int argc, char** argv) {
 			std::cout << "Unknown error occurred" << std::endl;
 			return 1;
 		}
+		util::debug(1, "Data successfully parsed");
 
 
-		SDL_Window* window; SDL_Renderer* renderer; SDL_Texture* visualizer; TTF_Font* font;
+		util::debug(1, "Generating graph from parsed data");
 		try {
-			//Generate the necessary things for rendering the graph from the file
-			window = util::generateWindow();
-			renderer = util::generateRenderer(window);
-			visualizer = util::generateTexture(renderer);
-			font = util::getFont("Consolas", 24);
-
 			//Fill the background and print the header of the graph
+			util::debug(1, "Filling background and print graph header");
 			util::fill(renderer, visualizer, util::ABR_BKGD_COLOR);
 			util::printText(
 				renderer, visualizer, filename, 75, 10, 24, 0,
@@ -160,14 +197,17 @@ int main(int argc, char** argv) {
 			);
 
 			//Discover the filename index
+			util::debug(1, "Scanning for filename index");
 			size_t fileindex = 0;
 			for (size_t x = 0; x < labels.size(); x++)
 				if (labels[x] == "FILE") fileindex = x;
 
 			//Store the position of the graph on the screen
+			util::debug(1, "Establishing graph frame position");
 			SDL_Rect framepos = { 75, 110, util::IMG_W - 125, util::IMG_H - 300 };
 
 			//Initialize some graph information
+			util::debug(1, "Initializing graph metadata");
 			proc::graphData_t graphInfo;
 			graphInfo.framepos = framepos;
 			//graphInfo.fileList = { table[fileindex], 0 };
@@ -179,19 +219,24 @@ int main(int argc, char** argv) {
 			proc::getDataRange(table, &graphInfo);
 
 			//Print the graph frame that will show behind the data
+			util::debug(1, "Rendering graph frame to visualizer");
 			proc::printGraphFrame(renderer, visualizer, &graphInfo, font);
 
+			util::debug(1, "Generating graph bars from parsed data");
 			std::vector<proc::graphBar_t> barsList =
 				proc::generateBars(graphInfo, labels, table);
 			proc::focusShortBars(&barsList);
 
 			//Print the color keys at the top of the graph frame
+			util::debug(1, "Rendering graph key to visualizer");
 			proc::printKeys(renderer, visualizer, labels, graphInfo, font);
 
 			//Draw each of the bars on under the graph
+			util::debug(1, "Rendering graph bars to visualizer");
 			proc::printBars(renderer, visualizer, barsList, font, false);
 
 			//Render the graph onto the window
+			util::debug(1, "Rendering texture to visual surface");
 			util::renderTexture(renderer, visualizer);
 		}
 		catch (const char* err) {
@@ -206,34 +251,49 @@ int main(int argc, char** argv) {
 			std::cout << "Unknown error occurred" << std::endl;
 			return 1;
 		}
+		util::debug(1, "Graph generation complete");
 
-
-		//For debugging, put the graph on the window
-		bool RUNNING = true;
-		while (RUNNING) {
-			SDL_Event event;
-			while (SDL_PollEvent(&event)) {
-				if (event.type == SDL_KEYDOWN)
-					if (event.key.keysym.sym == SDLK_q) RUNNING = false;
-				if (event.type == SDL_QUIT) RUNNING = false;
-			}
-		}
 
 		//Save the graph to a file
-		filectrl::saveGraphToFile(
-			renderer, filename, util::ABR_OUTPUT_EXT,
-			util::ABR_OUTPUT_DIR, "bargraph", visualizer
+		util::debug(1, "Saving finished graph to file");
+		try {
+			filectrl::saveGraphToFile(
+				renderer, filename, util::ABR_OUTPUT_EXT,
+				util::ABR_OUTPUT_DIR, "bargraph", visualizer
 			);
+		}
+		catch (const char* err) {
+			std::cout << err << std::endl;
+			return 1;
+		}
+		catch (string err) {
+			std::cout << err << std::endl;
+			return 1;
+		}
+		catch (...) {
+			std::cout << "Unknown error occurred" << std::endl;
+			return 1;
+		}
+		util::debug(1, "Graph saved to file\n");
 
-		//Clean up the dynamically allocated objects
-		SDL_DestroyTexture(visualizer);
-		SDL_DestroyWindow(window);
-		TTF_CloseFont(font);
 	}
 
+
+	//Clean up the dynamically allocated objects
+	util::debug(1, "Cleaning current texture");
+	SDL_DestroyTexture(visualizer);
+	//SDL_DestroyWindow(window);
+	util::debug(1, "Releasing the font");
+	TTF_CloseFont(font);
+
 	//Safely exit the graphics and text libraries.
+	util::debug(1, "Freeing renderer's generated surface");
+	SDL_FreeSurface(surf);
+
+	util::debug(1, "Closing down graphics libraries");
 	TTF_Quit();
 	SDL_Quit();
 
+	util::debug(1, "Making clean exit");
 	return 0;
 }
